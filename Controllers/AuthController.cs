@@ -3,6 +3,7 @@ using GameAPI.Interfaces;
 using GameAPI.Models;
 using GameAPI.Models.Authentification;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
@@ -22,6 +23,7 @@ namespace GameAPI.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("Login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             // 1. Валидация модели
@@ -68,6 +70,7 @@ namespace GameAPI.Controllers
         }
 
         [HttpPost("register")]
+        [EnableRateLimiting("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             // 1. Валидация модели
@@ -251,6 +254,7 @@ namespace GameAPI.Controllers
         }
 
         [HttpPost("resend-confirmation")]
+        [EnableRateLimiting("ResendConfirmation")]
         public async Task<IActionResult> ResendConfirmation(string authToken)
         {
             // Поиск пользователя по токену
