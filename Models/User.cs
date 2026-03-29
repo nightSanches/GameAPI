@@ -33,5 +33,15 @@ namespace GameAPI.Models
 
         [Column("registration_date")]
         public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
+
+        [Column("email_confirmed")]
+        public bool EmailConfirmed { get; set; }
+
+        [Column("email_confirmation_token")]
+        [StringLength(255)]
+        public string? EmailConfirmationToken { get; set; }
+
+        [Column("email_confirmation_token_expires")]
+        public DateTime? EmailConfirmationTokenExpires { get; set; }
     }
 }

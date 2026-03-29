@@ -1,4 +1,5 @@
 using GameAPI.Classes;
+using GameAPI.Interfaces;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,9 @@ builder.Services.AddSwaggerGen(c =>
 
 
 builder.Services.AddDbContext<DBConnection>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddControllers();
 //builder.Services.AddScoped<RoleChecker>();
 
 var app = builder.Build();
