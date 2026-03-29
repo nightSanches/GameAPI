@@ -21,7 +21,7 @@ builder.Services.AddSwaggerGen(c =>
 
 
 builder.Services.AddDbContext<DBConnection>();
-builder.Services.AddScoped<RoleChecker>();
+//builder.Services.AddScoped<RoleChecker>();
 
 var app = builder.Build();
 

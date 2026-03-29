@@ -1,13 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using GameAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameAPI.Classes
 {
     public class DBConnection : DbContext
     {
-        // Пример таблицы пользователей
         public DbSet<User> Users { get; set; }
 
-        public DatabaseConnection()
+        public DBConnection()
         {
             Database.EnsureCreated();
         }
@@ -29,9 +29,14 @@ namespace GameAPI.Classes
         /// <param name="modelBuilder">Билдер моделей</param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Пример настройки таблицы Users
+            // Уникальность никнейма
             modelBuilder.Entity<User>()
-                .HasIndex(u => u.Username)
+                .HasIndex(u => u.Nickname)
+                .IsUnique();
+
+            // Уникальность email (может быть NULL, поэтому уникальность работает корректно)
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
                 .IsUnique();
         }
     }
