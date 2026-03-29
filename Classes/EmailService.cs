@@ -38,6 +38,45 @@ namespace GameAPI.Classes
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
         }
+        public async Task SendEmailConfirmedNotificationAsync(string email)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("Your Game", _emailSettings.SenderEmail));
+            message.To.Add(new MailboxAddress("", email));
+            message.Subject = "Email подтверждён";
+
+            var bodyBuilder = new BodyBuilder
+            {
+                HtmlBody = $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }}
+                    h1 {{ color: #4CAF50; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <h1>✅ Email подтверждён</h1>
+                    <p>Здравствуйте!</p>
+                    <p>Ваш email был успешно подтверждён. Теперь вы можете пользоваться всеми функциями нашего сервиса.</p>
+                    <p>Спасибо, что используете наш проект!</p>
+                    <hr>
+                    <p style='color: #888; font-size: 12px;'>Если вы не выполняли это действие, пожалуйста, свяжитесь с поддержкой.</p>
+                </div>
+            </body>
+            </html>"
+            };
+            message.Body = bodyBuilder.ToMessageBody();
+
+            using var client = new SmtpClient();
+            await client.ConnectAsync(_emailSettings.SmtpServer, _emailSettings.SmtpPort, SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(_emailSettings.SenderEmail, _emailSettings.SenderPassword);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+        }
     }
 
     public class EmailSettings

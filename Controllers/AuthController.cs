@@ -88,11 +88,11 @@ namespace GameAPI.Controllers
             // 3. Если email указан, проверить его уникальность
             if (!string.IsNullOrWhiteSpace(request.Email))
             {
-                var existingUserByEmail = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == request.Email);
-                if (existingUserByEmail != null)
+                var confirmedUserWithEmail = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == request.Email && u.EmailConfirmed == true);
+                if (confirmedUserWithEmail != null)
                 {
-                    ModelState.AddModelError("Email", "Пользователь с таким email уже зарегистрирован.");
+                    ModelState.AddModelError("Email", "Пользователь с таким email уже существует.");
                     return BadRequest(new ValidationProblemDetails(ModelState));
                 }
             }
@@ -162,11 +162,42 @@ namespace GameAPI.Controllers
             if (user.EmailConfirmed)
                 return Content(GetSuccessHtml("Email уже был подтверждён."), "text/html");
 
-            // Подтверждаем
+            // Проверяем, не подтвердил ли уже кто-то этот email
+            var confirmedUserWithSameEmail = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == user.Email && u.EmailConfirmed == true && u.Id != user.Id);
+            if (confirmedUserWithSameEmail != null)
+            {
+                return Content(GetErrorHtml("Этот email уже подтверждён другим пользователем. Выберите другой email."), "text/html");
+            }
+
+            // Обнуляем email у других неподтверждённых пользователей с этим email
+            var otherUnconfirmedUsers = await _context.Users
+                .Where(u => u.Email == user.Email && u.EmailConfirmed == false && u.Id != user.Id)
+                .ToListAsync();
+            foreach (var other in otherUnconfirmedUsers)
+            {
+                other.Email = null;
+                other.EmailConfirmationToken = null;
+                other.EmailConfirmationTokenExpires = null;
+            }
+
+            // Подтверждаем email текущему пользователю
             user.EmailConfirmed = true;
             user.EmailConfirmationToken = null;
             user.EmailConfirmationTokenExpires = null;
             await _context.SaveChangesAsync();
+
+            // Отправляем уведомление о подтверждении (асинхронно, не блокируя ответ)
+            try
+            {
+                await _emailService.SendEmailConfirmedNotificationAsync(user.Email);
+            }
+            catch (Exception ex)
+            {
+                // Логируем ошибку, но не прерываем процесс
+                // Для продакшена можно использовать ILogger
+                Console.WriteLine($"Failed to send confirmation notification: {ex.Message}");
+            }
 
             return Content(GetSuccessHtml("Email успешно подтверждён! Теперь вы можете пользоваться всеми функциями."), "text/html");
         }
@@ -219,32 +250,23 @@ namespace GameAPI.Controllers
     </html>";
         }
 
-        public class ResendConfirmationRequest
-        {
-            [Required]
-            public string NicknameOrEmail { get; set; }
-        }
-
         [HttpPost("resend-confirmation")]
-        public async Task<IActionResult> ResendConfirmation([FromBody] ResendConfirmationRequest request)
+        public async Task<IActionResult> ResendConfirmation(string authToken)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new ValidationProblemDetails(ModelState));
+            // Поиск пользователя по токену
+            var user = await GetUserByToken(authToken);
+            if (user == null)
+                return Unauthorized(new { message = "Недействительный токен." });
 
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Nickname == request.NicknameOrEmail ||
-                                          u.Email == request.NicknameOrEmail);
-
-            if (user == null || string.IsNullOrWhiteSpace(user.Email))
-            {
-                // Для безопасности не уточняем, существует ли пользователь
-                return Ok(new { message = "Если указанный email зарегистрирован, вы получите письмо с подтверждением." });
-            }
-
+            // Если email уже подтверждён
             if (user.EmailConfirmed)
                 return BadRequest(new { message = "Email уже подтверждён." });
 
-            // Генерируем новый токен
+            // Если email не задан
+            if (string.IsNullOrWhiteSpace(user.Email))
+                return BadRequest(new { message = "У вас не указан email. Используйте /add-email для добавления." });
+
+            // Генерируем новый токен и отправляем письмо
             user.EmailConfirmationToken = GenerateEmailConfirmationToken();
             user.EmailConfirmationTokenExpires = DateTime.UtcNow.AddHours(24);
             await _context.SaveChangesAsync();
@@ -252,7 +274,63 @@ namespace GameAPI.Controllers
             var confirmationLink = $"{Request.Scheme}://{Request.Host}/api/auth/confirm-email?token={user.EmailConfirmationToken}";
             await _emailService.SendConfirmationEmailAsync(user.Email, confirmationLink);
 
-            return Ok(new { message = "Письмо отправлено. Проверьте ваш почтовый ящик." });
+            return Ok(new { message = "Письмо отправлено повторно. Проверьте почту." });
+        }
+
+        public class AddEmailRequest
+        {
+            [Required]
+            [EmailAddress(ErrorMessage = "Неверный формат email.")]
+            public string Email { get; set; }
+        }
+
+        [HttpPost("add-email")]
+        public async Task<IActionResult> AddEmail(string authToken,
+            [FromBody] AddEmailRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ValidationProblemDetails(ModelState));
+
+            var user = await GetUserByToken(authToken);
+            if (user == null)
+                return Unauthorized(new { message = "Недействительный токен." });
+
+            // Проверка, что email не подтверждён другим пользователем
+            var confirmedUserWithEmail = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == request.Email && u.EmailConfirmed == true);
+            if (confirmedUserWithEmail != null)
+                return BadRequest(new { message = "Этот email уже подтверждён другим пользователем." });
+
+            // Если у пользователя уже есть email и он не подтверждён, можно заменить
+            // Если email уже подтверждён – запрещаем (но это не должно случиться, т.к. мы проверили выше)
+            if (user.EmailConfirmed)
+                return BadRequest(new { message = "Ваш email уже подтверждён." });
+
+            // Обновляем email
+            user.Email = request.Email;
+            user.EmailConfirmed = false;
+            user.EmailConfirmationToken = GenerateEmailConfirmationToken();
+            user.EmailConfirmationTokenExpires = DateTime.UtcNow.AddHours(24);
+            await _context.SaveChangesAsync();
+
+            // Отправляем письмо
+            var confirmationLink = $"{Request.Scheme}://{Request.Host}/api/auth/confirm-email?token={user.EmailConfirmationToken}";
+            await _emailService.SendConfirmationEmailAsync(user.Email, confirmationLink);
+
+            return Ok(new { message = "Письмо с подтверждением отправлено на указанный email." });
+        }
+
+        private async Task<User> GetUserByToken(string authToken)
+        {
+            if (string.IsNullOrWhiteSpace(authToken))
+                return null;
+
+            // Предполагаем, что токен передаётся как "Bearer <token>" или просто токен
+            var token = authToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                ? authToken.Substring(7)
+                : authToken;
+
+            return await _context.Users.FirstOrDefaultAsync(u => u.Token == token);
         }
 
         private string GenerateRandomToken(int length)
