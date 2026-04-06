@@ -25,10 +25,34 @@ namespace GameAPI.Classes
             var bodyBuilder = new BodyBuilder
             {
                 HtmlBody = $@"
-                <h1>Подтверждение email</h1>
-                <p>Для подтверждения вашего email перейдите по ссылке:</p>
-                <a href='{confirmationLink}'>{confirmationLink}</a>
-                <p>Ссылка действительна 24 часа.</p>"
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset='utf-8'>
+        <title>Подтверждение email</title>
+    </head>
+    <body style='font-family: Arial, sans-serif; text-align: center;'>
+        <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;'>
+            <h1 style='color: #4CAF50;'>Подтверждение email</h1>
+            <p>Для завершения регистрации нажмите на кнопку ниже:</p>
+            <a href='{confirmationLink}' 
+               style='display: inline-block; 
+                      background-color: #4CAF50; 
+                      color: white; 
+                      padding: 12px 24px; 
+                      text-decoration: none; 
+                      border-radius: 5px; 
+                      font-size: 16px;
+                      margin: 20px 0;'>
+                Подтвердить email
+            </a>
+            <p style='color: #888; font-size: 12px;'>Если кнопка не работает, скопируйте ссылку в браузер:<br>
+            <a href='{confirmationLink}' style='color: #4CAF50;'>{confirmationLink}</a></p>
+            <p>Ссылка действительна 24 часа.</p>
+            <p style='color: #888; font-size: 12px;'>Если это не вы, проигнорируйте это письмо.</p>
+        </div>
+    </body>
+    </html>"
             };
             message.Body = bodyBuilder.ToMessageBody();
 
@@ -61,8 +85,8 @@ namespace GameAPI.Classes
                 <div class='container'>
                     <h1>✅ Email подтверждён</h1>
                     <p>Здравствуйте!</p>
-                    <p>Ваш email был успешно подтверждён. Теперь вы можете пользоваться всеми функциями нашего сервиса.</p>
-                    <p>Спасибо, что используете наш проект!</p>
+                    <p>Ваш email был успешно подтверждён. Не забудьте забрать свой подарок в главном меню игры!</p>
+                    <p>Спасибо, что играете в нашу игру!</p>
                     <hr>
                     <p style='color: #888; font-size: 12px;'>Если вы не выполняли это действие, пожалуйста, свяжитесь с поддержкой.</p>
                 </div>

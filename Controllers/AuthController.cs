@@ -144,6 +144,34 @@ namespace GameAPI.Controllers
                 RegistrationDate = user.RegistrationDate
             };
 
+            // 8. Создание записей в других таблицах для нового пользователя
+            var bonuses = new UserBonuses
+            {
+                UserId = user.Id
+            };
+            _context.UserBonuses.Add(bonuses);
+
+            var gift = new UserGifts
+            {
+                UserId = user.Id
+            };
+            _context.UserGifts.Add(gift);
+
+            var score = new UserScores
+            {
+                UserId = user.Id,
+                BestScore = 0
+            };
+            _context.UserScores.Add(score);
+
+            var upgrades = new UserUpgrades
+            {
+                UserId = user.Id
+            };
+            _context.UserUpgrades.Add(upgrades);
+
+            await _context.SaveChangesAsync();
+
             return Ok(response);
         }
 
@@ -202,7 +230,7 @@ namespace GameAPI.Controllers
                 Console.WriteLine($"Failed to send confirmation notification: {ex.Message}");
             }
 
-            return Content(GetSuccessHtml("Email успешно подтверждён! Теперь вы можете пользоваться всеми функциями."), "text/html");
+            return Content(GetSuccessHtml("Email успешно подтверждён!"), "text/html");
         }
 
         private string GetSuccessHtml(string message)
@@ -268,7 +296,7 @@ namespace GameAPI.Controllers
 
             // Если email не задан
             if (string.IsNullOrWhiteSpace(user.Email))
-                return BadRequest(new { message = "У вас не указан email. Используйте /add-email для добавления." });
+                return BadRequest(new { message = "У вас не указан email." });
 
             // Генерируем новый токен и отправляем письмо
             user.EmailConfirmationToken = GenerateEmailConfirmationToken();

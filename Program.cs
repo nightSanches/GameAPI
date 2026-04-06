@@ -11,9 +11,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
-        Title = "Equipment Management API",
+        Title = "Apex Town Game API",
         Version = "v1",
-        Description = "API для управления оборудованием"
+        Description = "API для управления данными игры Apex Town"
     });
 
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -36,7 +36,6 @@ builder.Services.AddRateLimiter(options =>
             });
         });
 
-    // Специфичные политики для критических эндпоинтов
     options.AddPolicy("Login", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
