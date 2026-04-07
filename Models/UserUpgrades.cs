@@ -36,7 +36,7 @@ namespace GameAPI.Models
 
         [Required]
         [Column("up_extra_silver")]
-        public int UpExtraSilve { get; set; }
+        public int UpExtraSilver { get; set; }
 
         [Required]
         [Column("up_extra_mul")]
