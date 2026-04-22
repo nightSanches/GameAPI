@@ -22,12 +22,12 @@ namespace GameAPI.Controllers
             if (string.IsNullOrEmpty(authorization))
                 return Unauthorized(new { message = "Токен не предоставлен" });
 
-            // 2. Найти пользователя по токену
+            //найти пользователя по токену
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Token == authorization);
             if (user == null)
-                return Unauthorized(new { message = "Неверный или просроченный токен" });
+                return Unauthorized(new { message = "Неверный токен" });
 
-            // 3. Проверить подтверждение email
+            //проверить подтверждение email
             if (!user.EmailConfirmed)
             {
                 return Ok(new BonusClaimResponse
@@ -37,7 +37,7 @@ namespace GameAPI.Controllers
                 });
             }
 
-            // 4. Получить или создать запись в UserGifts
+            //получить или создать запись в UserGifts
             var gifts = await _context.UserGifts.FirstOrDefaultAsync(g => g.UserId == user.Id);
             if (gifts == null)
             {
@@ -46,7 +46,7 @@ namespace GameAPI.Controllers
                 await _context.SaveChangesAsync(); // сохраняем, чтобы иметь Id
             }
 
-            // 5. Проверить, можно ли получить бонус (последний раз был null или прошло >= 8 часов)
+            //проверить, можно ли получить бонус (последний раз был null или прошло >= 8 часов)
             bool canClaim = false;
             if (gifts.LastBonusDT == null)
             {
@@ -68,11 +68,11 @@ namespace GameAPI.Controllers
                 });
             }
 
-            // 6. Сгенерировать случайные ресурсы
+            //сгенерировать случайные ресурсы
             int goldEarned = Random.Shared.Next(10, 31);   // 10..30
             int silverEarned = Random.Shared.Next(3, 11); // 3..10
 
-            // 7. Получить или создать запись в UserUpgrades
+            //получить или создать запись в UserUpgrades
             var upgrades = await _context.UserUpgrades.FirstOrDefaultAsync(u => u.UserId == user.Id);
             if (upgrades == null)
             {
@@ -90,14 +90,14 @@ namespace GameAPI.Controllers
                 _context.UserUpgrades.Add(upgrades);
             }
 
-            // 8. Начислить ресурсы и обновить дату получения
+            //начислить ресурсы и обновить дату получения
             upgrades.Gold += goldEarned;
             upgrades.Silver += silverEarned;
             gifts.LastBonusDT = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            // 9. Получить актуальные данные пользователя (аналогично методу LoadData)
+            //получить актуальные данные пользователя (аналогично методу LoadData)
             var userData = await GetUserDataResponse(user.Id);
 
             return Ok(new BonusClaimResponse

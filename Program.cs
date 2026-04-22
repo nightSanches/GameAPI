@@ -22,7 +22,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddRateLimiter(options =>
 {
-    // Глобальный лимит: 100 запросов в 10 секунд на IP
+    // Глобальный лимит 100 запросов в 10 секунд на IP
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(
         httpContext =>
         {
@@ -36,6 +36,7 @@ builder.Services.AddRateLimiter(options =>
             });
         });
 
+    // Лимит 5 запросов на авторизацию в 1 мин. на IP
     options.AddPolicy("Login", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -46,6 +47,7 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             }));
 
+    // Лимит 3 запроса на регистрацию в 10 мин. на IP
     options.AddPolicy("Register", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -56,6 +58,7 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             }));
 
+    // Лимит 2 запроса на подтверждение почты в 15 мин. на IP
     options.AddPolicy("ResendConfirmation", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",

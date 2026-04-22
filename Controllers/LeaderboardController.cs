@@ -26,10 +26,9 @@ namespace GameAPI.Controllers
             if (!string.IsNullOrEmpty(authorization))
             {
                 currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Token == authorization);
-                // Не возвращаем 401, если токен невалидный — просто не покажем персональные данные
             }
 
-            // 2. Получить топ-50 результатов
+            // Получить 50 лучших игроков
             var top50 = await _context.UserScores
                 .OrderByDescending(s => s.BestScore)
                 .Take(50)
@@ -45,7 +44,7 @@ namespace GameAPI.Controllers
                 Top50 = top50
             };
 
-            // 3. Если пользователь авторизован — добавить его рекорд и место
+            // Если пользователь авторизован — получить его рекорд и место
             if (currentUser != null)
             {
                 var userScore = await _context.UserScores
@@ -56,13 +55,12 @@ namespace GameAPI.Controllers
                     response.UserBestScore = userScore.BestScore;
 
                     // Подсчёт места: количество игроков с результатом строго больше, +1
-                    // (стандартный RANK: одинаковые счета делят место, следующее место пропускается)
+                    // (одинаковые счета делят место, следующее место пропускается)
                     var place = await _context.UserScores
                         .CountAsync(s => s.BestScore > userScore.BestScore) + 1;
 
                     response.UserPlace = place;
                 }
-                // Если у пользователя нет записи в UserScores — поля остаются null
             }
 
             return Ok(response);
