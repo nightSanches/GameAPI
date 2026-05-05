@@ -6,6 +6,7 @@ using GameAPI.Models.Email;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using static GameAPI.Models.Authentification.FullLoginResponse;
 
 namespace GameAPI.Controllers
 {
@@ -55,18 +56,8 @@ namespace GameAPI.Controllers
             user.Token = GenerateRandomToken(100);
             await _context.SaveChangesAsync();
 
-            var response = new LoginResponse
-            {
-                Id = user.Id,
-                Nickname = user.Nickname,
-                Token = user.Token,
-                Role = user.Role,
-                Email = user.Email,
-                EmailConfirmed = user.EmailConfirmed,
-                RegistrationDate = user.RegistrationDate
-            };
-
-            return Ok(response);
+            var fullResponse = await BuildFullLoginResponse(user);
+            return Ok(fullResponse);
         }
 
         /// <summary>
@@ -136,18 +127,8 @@ namespace GameAPI.Controllers
             // Создание связанных записей в других таблицах
             await CreateDefaultUserData(user.Id);
 
-            var response = new LoginResponse
-            {
-                Id = user.Id,
-                Nickname = user.Nickname,
-                Token = user.Token,
-                Role = user.Role,
-                Email = user.Email,
-                EmailConfirmed = user.EmailConfirmed,
-                RegistrationDate = user.RegistrationDate
-            };
-
-            return Ok(response);
+            var fullResponse = await BuildFullLoginResponse(user);
+            return Ok(fullResponse);
         }
 
         /// <summary>
@@ -288,6 +269,9 @@ namespace GameAPI.Controllers
             // Подарки
             _context.UserGifts.Add(new UserGift { UserId = userId, LastBonusDt = null });
 
+            // Статистика
+            _context.UserStatss.Add(new UserStats { UserId = userId, GamesPlayedCount = 0, BlocksPlacedCount = 0, IBlocksPlacedCount = 0 });
+
             // Бонусы – для каждого бонуса из справочника создаём запись с количеством 0
             var allBonuses = await _context.Bonuses.ToListAsync();
             foreach (var bonus in allBonuses)
@@ -313,6 +297,106 @@ namespace GameAPI.Controllers
             }
 
             await _context.SaveChangesAsync();
+        }
+        /// <summary>
+        /// Формирует полный профиль игрока для ответа
+        /// </summary>
+        private async Task<FullLoginResponse> BuildFullLoginResponse(User user)
+        {
+            // Подгружаем связанные данные, если они не включены
+            if (user.Wallet == null)
+                user.Wallet = await _context.UserWallets.FirstOrDefaultAsync(w => w.UserId == user.Id);
+            if (user.Score == null)
+                user.Score = await _context.UserScores.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            if (user.Gift == null)
+                user.Gift = await _context.UserGifts.FirstOrDefaultAsync(g => g.UserId == user.Id);
+
+            // Статистика
+            var stats = await _context.UserStatss.FirstOrDefaultAsync(s => s.UserId == user.Id);
+
+            // Ранг игрока (dense rank)
+            int rank = 1;
+            if (user.Score != null)
+            {
+                var scores = await _context.UserScores
+                    .Select(s => s.BestScore)
+                    .Distinct()
+                    .OrderByDescending(s => s)
+                    .ToListAsync();
+                rank = scores.FindIndex(s => s == user.Score.BestScore) + 1;
+            }
+
+            // Бонусы
+            var bonuses = await _context.UserBonuses
+                .Where(b => b.UserId == user.Id)
+                .Select(b => new UserBonusDto { BonusId = b.BonusId, Quantity = b.Quantity })
+                .ToListAsync();
+
+            // Улучшения
+            var upgrades = await _context.UserUpgrades
+                .Where(u => u.UserId == user.Id)
+                .Select(u => new UserUpgradeDto { UpgradeId = u.UpgradeId, Level = u.Level })
+                .ToListAsync();
+
+            // Скины
+            var skins = await _context.UserCosmetics
+                .Where(c => c.UserId == user.Id)
+                .Select(c => c.CosmeticId)
+                .ToListAsync();
+
+            // Доступность подарка: email подтверждён и прошло >=24 часа с последнего получения
+            bool giftAvailable = user.EmailConfirmed && (user.Gift?.LastBonusDt == null ||
+                (DateTime.UtcNow - user.Gift.LastBonusDt.Value).TotalHours >= 24);
+
+            // Конфигурация магазина
+            var storeConfig = new StoreConfigDto
+            {
+                Bonuses = await _context.Bonuses.Select(b => new BonusConfigDto
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    Description = b.Description,
+                    PriceGold = b.PriceGold
+                }).ToListAsync(),
+                Cosmetics = await _context.Cosmetics.Select(c => new CosmeticConfigDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Description = c.Description,
+                    PriceSilver = c.PriceSilver
+                }).ToListAsync(),
+                UpgradeLevels = await _context.UpgradesCosts.Select(ul => new UpgradeLevelConfigDto
+                {
+                    UpgradeId = ul.UpgradeId,
+                    Level = ul.Level,
+                    PriceGold = ul.PriceGold,
+                    PriceSilver = ul.PriceSilver
+                }).ToListAsync()
+            };
+
+            return new FullLoginResponse
+            {
+                Id = user.Id,
+                Nickname = user.Nickname,
+                Token = user.Token,
+                Role = user.Role,
+                Email = user.Email,
+                EmailConfirmed = user.EmailConfirmed,
+                RegistrationDate = user.RegistrationDate,
+                Gold = user.Wallet?.Gold ?? 0,
+                Silver = user.Wallet?.Silver ?? 0,
+                BestScore = user.Score?.BestScore ?? 0,
+                Rank = rank,
+                GamesPlayed = stats?.GamesPlayedCount ?? 0,
+                BlocksPlaced = stats?.BlocksPlacedCount ?? 0,
+                PerfectBlocks = stats?.IBlocksPlacedCount ?? 0,
+                Bonuses = bonuses,
+                Upgrades = upgrades,
+                OwnedSkinIds = skins,
+                LastGiftClaimTime = user.Gift?.LastBonusDt,
+                GiftAvailable = giftAvailable,
+                StoreConfig = storeConfig
+            };
         }
 
         /// <summary>
@@ -359,43 +443,43 @@ namespace GameAPI.Controllers
 
         // HTML-страницы для подтверждения email
         private string GetSuccessHtml(string message) => $@"
-<!DOCTYPE html>
-<meta charset=""UTF-8"">
-<html lang=""ru"">
-<head><title>Подтверждение email</title>
-<style>
-    body {{ font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }}
-    .container {{ max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; background: #f9f9f9; }}
-    h1 {{ color: #4CAF50; }}
-    p {{ font-size: 18px; }}
-</style>
-</head>
-<body>
-    <div class='container'>
-        <h1>✅ Успешно</h1>
-        <p>{message}</p>
-    </div>
-</body>
-</html>";
+            <!DOCTYPE html>
+            <meta charset=""UTF-8"">
+            <html lang=""ru"">
+            <head><title>Подтверждение email</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }}
+                .container {{ max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; background: #f9f9f9; }}
+                h1 {{ color: #4CAF50; }}
+                p {{ font-size: 18px; }}
+            </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <h1>✅ Успешно</h1>
+                    <p>{message}</p>
+                </div>
+            </body>
+            </html>";
 
         private string GetErrorHtml(string message) => $@"
-<!DOCTYPE html>
-<meta charset=""UTF-8"">
-<html lang=""ru"">
-<head><title>Ошибка подтверждения</title>
-<style>
-    body {{ font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }}
-    .container {{ max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; background: #f9f9f9; }}
-    h1 {{ color: #f44336; }}
-    p {{ font-size: 18px; }}
-</style>
-</head>
-<body>
-    <div class='container'>
-        <h1>❌ Ошибка</h1>
-        <p>{message}</p>
-    </div>
-</body>
-</html>";
+            <!DOCTYPE html>
+            <meta charset=""UTF-8"">
+            <html lang=""ru"">
+            <head><title>Ошибка подтверждения</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }}
+                .container {{ max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; background: #f9f9f9; }}
+                h1 {{ color: #f44336; }}
+                p {{ font-size: 18px; }}
+            </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <h1>❌ Ошибка</h1>
+                    <p>{message}</p>
+                </div>
+            </body>
+            </html>";
     }
 }

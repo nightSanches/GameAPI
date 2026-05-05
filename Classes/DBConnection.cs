@@ -15,6 +15,8 @@ namespace GameAPI.Classes
         public DbSet<UserScore> UserScores { get; set; }
         public DbSet<UserUpgrade> UserUpgrades { get; set; }
         public DbSet<UserWallet> UserWallets { get; set; }
+        public DbSet<UpgradesCost> UpgradesCosts { get; set; }
+        public DbSet<UserStats> UserStatss { get; set; }
 
         public DBConnection()
         {
@@ -77,8 +79,23 @@ namespace GameAPI.Classes
                 entity.ToTable("Upgrades");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                // Цены удалены – больше не мапим PriceGold/PriceSilver
+            });
+
+            // --- Upgrades_cost ---
+            modelBuilder.Entity<UpgradesCost>(entity =>
+            {
+                entity.ToTable("Upgrades_cost");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UpgradeId).IsRequired();
+                entity.Property(e => e.Level).HasDefaultValue(1);
                 entity.Property(e => e.PriceGold).HasDefaultValue(0);
                 entity.Property(e => e.PriceSilver).HasDefaultValue(0);
+
+                entity.HasOne<Upgrade>()
+                      .WithMany()
+                      .HasForeignKey(e => e.UpgradeId)
+                      .OnDelete(DeleteBehavior.Restrict); // или Cascade, но осторожно
             });
 
             // --- Users_bonuses ---
@@ -158,13 +175,28 @@ namespace GameAPI.Classes
             {
                 entity.ToTable("Users_wallet");
                 entity.HasKey(e => e.Id);
-                entity.HasIndex(e => e.UserId); // не уникальный индекс (как в SQL)
+                entity.HasIndex(e => e.UserId).IsUnique(); // Делаем уникальным, как в БД
                 entity.HasOne(e => e.User)
                       .WithOne(u => u.Wallet)
                       .HasForeignKey<UserWallet>(e => e.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
                 entity.Property(e => e.Gold).HasDefaultValue(0);
                 entity.Property(e => e.Silver).HasDefaultValue(0);
+            });
+
+            // --- Users_stats ---
+            modelBuilder.Entity<UserStats>(entity =>
+            {
+                entity.ToTable("Users_stats");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.UserId).IsUnique();
+                entity.HasOne(e => e.User)
+                      .WithOne() // можно добавить навигационное свойство в User
+                      .HasForeignKey<UserStats>(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.Property(e => e.GamesPlayedCount).HasDefaultValue(0);
+                entity.Property(e => e.BlocksPlacedCount).HasDefaultValue(0);
+                entity.Property(e => e.IBlocksPlacedCount).HasDefaultValue(0);
             });
         }
     }

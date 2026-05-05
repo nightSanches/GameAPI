@@ -2,23 +2,11 @@
 
 namespace GameAPI.Models.Shop
 {
-    public class PurchaseBonusRequest
+    public class PurchaseRequest
     {
-        [Range(1, int.MaxValue)]
-        public int BonusId { get; set; }
-        // количество = 1 всегда (можно закупать по одному)
-    }
-
-    public class PurchaseCosmeticRequest
-    {
-        [Range(1, int.MaxValue)]
-        public int CosmeticId { get; set; }
-    }
-
-    public class PurchaseUpgradeRequest
-    {
-        [Range(1, int.MaxValue)]
-        public int UpgradeId { get; set; }
+        public string ItemType { get; set; } // "bonus", "cosmetic", "upgrade"
+        public int ItemId { get; set; }
+        public int Level { get; set; } // для улучшений, иначе 0
     }
 
 }

@@ -8,7 +8,7 @@ namespace GameAPI.Models
         public int Id { get; set; }
         [Column("User_id")]
         public int UserId { get; set; }
-        [Column("Cosmetic_id")]
+        [Column("Cosmetics_id")]
         public int CosmeticId { get; set; }
         public User User { get; set; }
         public Cosmetic Cosmetic { get; set; }
