@@ -18,7 +18,7 @@ namespace GameAPI.Classes
         public async Task SendConfirmationEmailAsync(string email, string confirmationLink)
         {
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("Your Game", _emailSettings.SenderEmail));
+            message.From.Add(new MailboxAddress("Apex Town", _emailSettings.SenderEmail));
             message.To.Add(new MailboxAddress("", email));
             message.Subject = "Подтверждение email";
 

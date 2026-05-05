@@ -1,47 +1,32 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using GameAPI.Models;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameAPI.Models
 {
-    [Table("users")]
+    [Table("Users")]
     public class User
     {
-        [Key]
-        [Column("id")]
         public int Id { get; set; }
-
-        [Required]
-        [Column("nickname")]
-        [StringLength(30)]
         public string Nickname { get; set; }
-
-        [Required]
-        [Column("password")]
-        public string Password { get; set; } // Хранит хэш пароля
-
-        [Column("role")]
-        [StringLength(50)]
-        public string Role { get; set; } = "player";
-
-        [Column("token")]
-        [StringLength(100)]
+        public string Password { get; set; }
+        public string Role { get; set; }
         public string? Token { get; set; }
-
-        [Column("email")]
-        [StringLength(100)]
         public string? Email { get; set; }
-
-        [Column("registration_date")]
-        public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
-
-        [Column("email_confirmed")]
+        [Column("Registration_date")]
+        public DateTime? RegistrationDate { get; set; }
+        [Column("Email_confirmed")]
         public bool EmailConfirmed { get; set; }
-
-        [Column("email_confirmation_token")]
-        [StringLength(255)]
+        [Column("Email_confirmation_token")]
         public string? EmailConfirmationToken { get; set; }
-
-        [Column("email_confirmation_token_expires")]
+        [Column("Email_confirmation_token_expires")]
         public DateTime? EmailConfirmationTokenExpires { get; set; }
+
+        // Навигационные свойства
+        public UserWallet Wallet { get; set; }
+        public UserScore Score { get; set; }
+        public UserGift Gift { get; set; }
+        public ICollection<UserBonus> Bonuses { get; set; }
+        public ICollection<UserUpgrade> Upgrades { get; set; }
+        public ICollection<UserCosmetic>? Cosmetics { get; set; }
     }
 }

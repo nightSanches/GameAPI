@@ -6,11 +6,15 @@ namespace GameAPI.Classes
     public class DBConnection : DbContext
     {
         public DbSet<User> Users { get; set; }
-        public DbSet<UserBonuses> UserBonuses { get; set; }
-        public DbSet<UserCosmetics> UserCosmetics { get; set; }
-        public DbSet<UserGifts> UserGifts { get; set; }
-        public DbSet<UserScores> UserScores { get; set; }
-        public DbSet<UserUpgrades> UserUpgrades { get; set; }
+        public DbSet<Bonus> Bonuses { get; set; }
+        public DbSet<Cosmetic> Cosmetics { get; set; }
+        public DbSet<Upgrade> Upgrades { get; set; }
+        public DbSet<UserBonus> UserBonuses { get; set; }
+        public DbSet<UserCosmetic> UserCosmetics { get; set; }
+        public DbSet<UserGift> UserGifts { get; set; }
+        public DbSet<UserScore> UserScores { get; set; }
+        public DbSet<UserUpgrade> UserUpgrades { get; set; }
+        public DbSet<UserWallet> UserWallets { get; set; }
 
         public DBConnection()
         {
@@ -34,31 +38,134 @@ namespace GameAPI.Classes
         /// <param name="modelBuilder">Билдер моделей</param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Уникальность никнейма
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.Nickname)
-                .IsUnique();
+            base.OnModelCreating(modelBuilder);
 
-            // Уникальность email (может быть NULL, поэтому уникальность работает корректно)
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.Email)
-                .IsUnique();
+            // --- Users ---
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.ToTable("Users");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Nickname).IsUnique();
+                entity.Property(e => e.Nickname).IsRequired().HasMaxLength(30);
+                entity.Property(e => e.Password).IsRequired();
+                entity.Property(e => e.Role).HasDefaultValue("player");
+                entity.Property(e => e.RegistrationDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.EmailConfirmed).HasDefaultValue(false);
+            });
 
-            modelBuilder.Entity<UserBonuses>()
-                .HasIndex(e => e.UserId)
-                .IsUnique();
+            // --- Bonuses ---
+            modelBuilder.Entity<Bonus>(entity =>
+            {
+                entity.ToTable("Bonuses");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.PriceGold).HasDefaultValue(0);
+            });
 
-            modelBuilder.Entity<UserGifts>()
-                .HasIndex(e => e.UserId)
-                .IsUnique();
+            // --- Cosmetics ---
+            modelBuilder.Entity<Cosmetic>(entity =>
+            {
+                entity.ToTable("Cosmetics");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.PriceSilver).HasDefaultValue(0);
+            });
 
-            modelBuilder.Entity<UserScores>()
-                .HasIndex(e => e.UserId)
-                .IsUnique();
+            // --- Upgrades ---
+            modelBuilder.Entity<Upgrade>(entity =>
+            {
+                entity.ToTable("Upgrades");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.PriceGold).HasDefaultValue(0);
+                entity.Property(e => e.PriceSilver).HasDefaultValue(0);
+            });
 
-            modelBuilder.Entity<UserUpgrades>()
-               .HasIndex(e => e.UserId)
-               .IsUnique();
+            // --- Users_bonuses ---
+            modelBuilder.Entity<UserBonus>(entity =>
+            {
+                entity.ToTable("Users_bonuses");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.User)
+                      .WithMany(u => u.Bonuses)
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Bonus)
+                      .WithMany()
+                      .HasForeignKey(e => e.BonusId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.Property(e => e.Quantity).HasDefaultValue(0);
+            });
+
+            // --- Users_cosmetics ---
+            modelBuilder.Entity<UserCosmetic>(entity =>
+            {
+                entity.ToTable("Users_cosmetics");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.User)
+                      .WithMany(u => u.Cosmetics)
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Cosmetic)
+                      .WithMany()
+                      .HasForeignKey(e => e.CosmeticId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // --- Users_gifts ---
+            modelBuilder.Entity<UserGift>(entity =>
+            {
+                entity.ToTable("Users_gifts");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.UserId).IsUnique();
+                entity.HasOne(e => e.User)
+                      .WithOne(u => u.Gift)
+                      .HasForeignKey<UserGift>(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // --- Users_scores ---
+            modelBuilder.Entity<UserScore>(entity =>
+            {
+                entity.ToTable("Users_scores");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.UserId).IsUnique();
+                entity.HasOne(e => e.User)
+                      .WithOne(u => u.Score)
+                      .HasForeignKey<UserScore>(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.Property(e => e.BestScore).IsRequired();
+            });
+
+            // --- Users_upgrades ---
+            modelBuilder.Entity<UserUpgrade>(entity =>
+            {
+                entity.ToTable("Users_upgrades");
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.User)
+                      .WithMany(u => u.Upgrades)
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Upgrade)
+                      .WithMany()
+                      .HasForeignKey(e => e.UpgradeId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.Property(e => e.Level).HasDefaultValue(0);
+            });
+
+            // --- Users_wallet ---
+            modelBuilder.Entity<UserWallet>(entity =>
+            {
+                entity.ToTable("Users_wallet");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.UserId); // не уникальный индекс (как в SQL)
+                entity.HasOne(e => e.User)
+                      .WithOne(u => u.Wallet)
+                      .HasForeignKey<UserWallet>(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.Property(e => e.Gold).HasDefaultValue(0);
+                entity.Property(e => e.Silver).HasDefaultValue(0);
+            });
         }
     }
 }
