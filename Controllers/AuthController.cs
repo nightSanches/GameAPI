@@ -348,6 +348,19 @@ namespace GameAPI.Controllers
             bool giftAvailable = user.EmailConfirmed && (user.Gift?.LastBonusDt == null ||
                 (DateTime.UtcNow - user.Gift.LastBonusDt.Value).TotalHours >= 24);
 
+            int secondsUntilNextGift = -1;
+            if (user.EmailConfirmed && user.Gift != null)
+            {
+                if (user.Gift.LastBonusDt == null)
+                    secondsUntilNextGift = 0; // можно забирать сразу
+                else
+                {
+                    var nextTime = user.Gift.LastBonusDt.Value.AddHours(24);
+                    var delta = nextTime - DateTime.UtcNow;
+                    secondsUntilNextGift = delta.TotalSeconds > 0 ? (int)delta.TotalSeconds : 0;
+                }
+            }
+
             // Конфигурация магазина
             var storeConfig = new StoreConfigDto
             {
@@ -393,7 +406,7 @@ namespace GameAPI.Controllers
                 Bonuses = bonuses,
                 Upgrades = upgrades,
                 OwnedSkinIds = skins,
-                LastGiftClaimTime = user.Gift?.LastBonusDt,
+                SecondsUntilNextGift = secondsUntilNextGift,
                 GiftAvailable = giftAvailable,
                 StoreConfig = storeConfig
             };

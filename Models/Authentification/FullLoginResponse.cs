@@ -30,7 +30,7 @@
         public List<int> OwnedSkinIds { get; set; }
 
         // Подарок
-        public DateTime? LastGiftClaimTime { get; set; }
+        public int SecondsUntilNextGift { get; set; }
         public bool GiftAvailable { get; set; }
 
         // Конфигурация магазина

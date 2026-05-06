@@ -49,6 +49,19 @@ namespace GameAPI.Controllers
 
             await _context.SaveChangesAsync();
 
+            int secondsUntilNextGift = -1;
+            if (user.EmailConfirmed && user.Gift != null)
+            {
+                if (user.Gift.LastBonusDt == null)
+                    secondsUntilNextGift = 0; // можно забирать сразу
+                else
+                {
+                    var nextTime = user.Gift.LastBonusDt.Value.AddHours(24);
+                    var delta = nextTime - DateTime.UtcNow;
+                    secondsUntilNextGift = delta.TotalSeconds > 0 ? (int)delta.TotalSeconds : 0;
+                }
+            }
+
             // Возвращаем обновлённый профиль (основные поля)
             var profile = new GiftResponse
             {
@@ -61,7 +74,7 @@ namespace GameAPI.Controllers
                 RegistrationDate = user.RegistrationDate,
                 Gold = wallet.Gold,
                 Silver = wallet.Silver,
-                LastGiftClaimTime = gift.LastBonusDt,
+                SecondsUntilNextGift = secondsUntilNextGift,
                 GiftAvailable = false
                 // Остальные поля не заполняем т.к. не нужны в данном ответе (или можно заполнить, если понадобится)
             };
