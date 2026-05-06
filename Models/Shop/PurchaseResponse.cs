@@ -9,6 +9,5 @@ namespace GameAPI.Models.Shop
         public int Silver { get; set; }
         public List<UserBonusDto> Bonuses { get; set; }
         public List<UserUpgradeDto> Upgrades { get; set; }
-        public List<int> OwnedSkinIds { get; set; }
     }
 }

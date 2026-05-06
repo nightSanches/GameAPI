@@ -27,6 +27,5 @@ namespace GameAPI.Models
         public UserGift Gift { get; set; }
         public ICollection<UserBonus> Bonuses { get; set; }
         public ICollection<UserUpgrade> Upgrades { get; set; }
-        public ICollection<UserCosmetic>? Cosmetics { get; set; }
     }
 }

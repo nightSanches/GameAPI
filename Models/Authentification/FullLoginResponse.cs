@@ -27,7 +27,6 @@
         // Владения
         public List<UserBonusDto> Bonuses { get; set; }
         public List<UserUpgradeDto> Upgrades { get; set; }
-        public List<int> OwnedSkinIds { get; set; }
 
         // Подарок
         public int SecondsUntilNextGift { get; set; }
@@ -52,7 +51,6 @@
         public class StoreConfigDto
         {
             public List<BonusConfigDto> Bonuses { get; set; }
-            public List<CosmeticConfigDto> Cosmetics { get; set; }
             public List<UpgradeLevelConfigDto> UpgradeLevels { get; set; }
         }
 
@@ -62,14 +60,6 @@
             public string Name { get; set; }
             public string Description { get; set; }
             public int PriceGold { get; set; }
-        }
-
-        public class CosmeticConfigDto
-        {
-            public int Id { get; set; }
-            public string Name { get; set; }
-            public string Description { get; set; }
-            public int PriceSilver { get; set; }
         }
 
         public class UpgradeLevelConfigDto

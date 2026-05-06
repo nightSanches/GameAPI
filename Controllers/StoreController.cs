@@ -50,18 +50,6 @@ namespace GameAPI.Controllers
                     }
                     break;
 
-                case "cosmetic":
-                    var cosmetic = await _context.Cosmetics.FindAsync(request.ItemId);
-                    if (cosmetic == null) return NotFound("Скин не найден");
-                    if (wallet.Silver < cosmetic.PriceSilver) return BadRequest("Недостаточно серебра");
-
-                    wallet.Silver -= cosmetic.PriceSilver;
-                    bool alreadyOwned = await _context.UserCosmetics
-                        .AnyAsync(c => c.UserId == user.Id && c.CosmeticId == request.ItemId);
-                    if (alreadyOwned) return BadRequest("У вас уже есть этот скин");
-                    _context.UserCosmetics.Add(new UserCosmetic { UserId = user.Id, CosmeticId = request.ItemId });
-                    break;
-
                 case "upgrade":
                     var upgradeLevel = await _context.UpgradesCosts
                         .FirstOrDefaultAsync(l => l.UpgradeId == request.ItemId && l.Level == request.Level);
@@ -98,10 +86,6 @@ namespace GameAPI.Controllers
                 Upgrades = await _context.UserUpgrades
                     .Where(u => u.UserId == user.Id)
                     .Select(u => new UserUpgradeDto { UpgradeId = u.UpgradeId, Level = u.Level })
-                    .ToListAsync(),
-                OwnedSkinIds = await _context.UserCosmetics
-                    .Where(c => c.UserId == user.Id)
-                    .Select(c => c.CosmeticId)
                     .ToListAsync()
             };
 

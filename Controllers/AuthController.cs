@@ -338,12 +338,6 @@ namespace GameAPI.Controllers
                 .Select(u => new UserUpgradeDto { UpgradeId = u.UpgradeId, Level = u.Level })
                 .ToListAsync();
 
-            // Скины
-            var skins = await _context.UserCosmetics
-                .Where(c => c.UserId == user.Id)
-                .Select(c => c.CosmeticId)
-                .ToListAsync();
-
             // Доступность подарка: email подтверждён и прошло >=24 часа с последнего получения
             bool giftAvailable = user.EmailConfirmed && (user.Gift?.LastBonusDt == null ||
                 (DateTime.UtcNow - user.Gift.LastBonusDt.Value).TotalHours >= 24);
@@ -370,13 +364,6 @@ namespace GameAPI.Controllers
                     Name = b.Name,
                     Description = b.Description,
                     PriceGold = b.PriceGold
-                }).ToListAsync(),
-                Cosmetics = await _context.Cosmetics.Select(c => new CosmeticConfigDto
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    Description = c.Description,
-                    PriceSilver = c.PriceSilver
                 }).ToListAsync(),
                 UpgradeLevels = await _context.UpgradesCosts.Select(ul => new UpgradeLevelConfigDto
                 {
@@ -405,7 +392,6 @@ namespace GameAPI.Controllers
                 PerfectBlocks = stats?.IBlocksPlacedCount ?? 0,
                 Bonuses = bonuses,
                 Upgrades = upgrades,
-                OwnedSkinIds = skins,
                 SecondsUntilNextGift = secondsUntilNextGift,
                 GiftAvailable = giftAvailable,
                 StoreConfig = storeConfig

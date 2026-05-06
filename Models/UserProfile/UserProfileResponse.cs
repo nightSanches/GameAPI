@@ -10,7 +10,6 @@ namespace GameAPI.Models.UserProfile
         public ScoreInfo Score { get; set; }
         public GiftInfo Gift { get; set; }
         public List<BonusInfo> Bonuses { get; set; }
-        public List<int> OwnedCosmeticIds { get; set; }
         public List<UpgradeInfo> Upgrades { get; set; }
     }
 

@@ -7,10 +7,8 @@ namespace GameAPI.Classes
     {
         public DbSet<User> Users { get; set; }
         public DbSet<Bonus> Bonuses { get; set; }
-        public DbSet<Cosmetic> Cosmetics { get; set; }
         public DbSet<Upgrade> Upgrades { get; set; }
         public DbSet<UserBonus> UserBonuses { get; set; }
-        public DbSet<UserCosmetic> UserCosmetics { get; set; }
         public DbSet<UserGift> UserGifts { get; set; }
         public DbSet<UserScore> UserScores { get; set; }
         public DbSet<UserUpgrade> UserUpgrades { get; set; }
@@ -64,15 +62,6 @@ namespace GameAPI.Classes
                 entity.Property(e => e.PriceGold).HasDefaultValue(0);
             });
 
-            // --- Cosmetics ---
-            modelBuilder.Entity<Cosmetic>(entity =>
-            {
-                entity.ToTable("Cosmetics");
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.PriceSilver).HasDefaultValue(0);
-            });
-
             // --- Upgrades ---
             modelBuilder.Entity<Upgrade>(entity =>
             {
@@ -112,21 +101,6 @@ namespace GameAPI.Classes
                       .HasForeignKey(e => e.BonusId)
                       .OnDelete(DeleteBehavior.Cascade);
                 entity.Property(e => e.Quantity).HasDefaultValue(0);
-            });
-
-            // --- Users_cosmetics ---
-            modelBuilder.Entity<UserCosmetic>(entity =>
-            {
-                entity.ToTable("Users_cosmetics");
-                entity.HasKey(e => e.Id);
-                entity.HasOne(e => e.User)
-                      .WithMany(u => u.Cosmetics)
-                      .HasForeignKey(e => e.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(e => e.Cosmetic)
-                      .WithMany()
-                      .HasForeignKey(e => e.CosmeticId)
-                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // --- Users_gifts ---
