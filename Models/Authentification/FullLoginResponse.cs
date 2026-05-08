@@ -13,7 +13,6 @@
 
         // Ресурсы
         public int Gold { get; set; }
-        public int Silver { get; set; }
 
         // Рекорд и место
         public int BestScore { get; set; }
@@ -51,6 +50,7 @@
         public class StoreConfigDto
         {
             public List<BonusConfigDto> Bonuses { get; set; }
+            public List<UpgradeConfigDto> Upgrades { get; set; }
             public List<UpgradeLevelConfigDto> UpgradeLevels { get; set; }
         }
 
@@ -61,13 +61,18 @@
             public string Description { get; set; }
             public int PriceGold { get; set; }
         }
+        public class UpgradeConfigDto
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public string Description { get; set; }
+        }
 
         public class UpgradeLevelConfigDto
         {
             public int UpgradeId { get; set; }
             public int Level { get; set; }
             public int PriceGold { get; set; }
-            public int PriceSilver { get; set; }
         }
     }
 }

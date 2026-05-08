@@ -54,7 +54,7 @@ namespace GameAPI.Controllers
                     var upgradeLevel = await _context.UpgradesCosts
                         .FirstOrDefaultAsync(l => l.UpgradeId == request.ItemId && l.Level == request.Level);
                     if (upgradeLevel == null) return NotFound("Уровень улучшения не найден");
-                    if (wallet.Gold < upgradeLevel.PriceGold || wallet.Silver < upgradeLevel.PriceSilver)
+                    if (wallet.Gold < upgradeLevel.PriceGold)
                         return BadRequest("Недостаточно валюты");
 
                     var userUpgrade = await _context.UserUpgrades
@@ -64,7 +64,6 @@ namespace GameAPI.Controllers
                         return BadRequest("Нельзя перескочить уровень");
 
                     wallet.Gold -= upgradeLevel.PriceGold;
-                    wallet.Silver -= upgradeLevel.PriceSilver;
                     userUpgrade.Level = request.Level;
                     break;
 
@@ -78,7 +77,6 @@ namespace GameAPI.Controllers
             var response = new PurchaseResponse
             {
                 Gold = wallet.Gold,
-                Silver = wallet.Silver,
                 Bonuses = await _context.UserBonuses
                     .Where(b => b.UserId == user.Id)
                     .Select(b => new UserBonusDto { BonusId = b.BonusId, Quantity = b.Quantity })

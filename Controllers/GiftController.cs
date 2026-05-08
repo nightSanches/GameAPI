@@ -40,11 +40,9 @@ namespace GameAPI.Controllers
             // Начисляем случайные монеты (можно настроить)
             var random = new Random();
             int goldReward = random.Next(50, 150);
-            int silverReward = random.Next(100, 300);
 
             var wallet = await _context.UserWallets.FirstOrDefaultAsync(w => w.UserId == user.Id);
             wallet.Gold += goldReward;
-            wallet.Silver += silverReward;
             gift.LastBonusDt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -73,7 +71,6 @@ namespace GameAPI.Controllers
                 EmailConfirmed = user.EmailConfirmed,
                 RegistrationDate = user.RegistrationDate,
                 Gold = wallet.Gold,
-                Silver = wallet.Silver,
                 SecondsUntilNextGift = secondsUntilNextGift,
                 GiftAvailable = false
                 // Остальные поля не заполняем т.к. не нужны в данном ответе (или можно заполнить, если понадобится)

@@ -19,5 +19,8 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     }
+  },
+  "AppSettings": {
+    "PublicBaseUrl": "http://localhost:5093"
   }
 }

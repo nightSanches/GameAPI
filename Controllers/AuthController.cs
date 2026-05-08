@@ -17,10 +17,13 @@ namespace GameAPI.Controllers
         private readonly DBConnection _context;
         private readonly IEmailService _emailService;
 
-        public AuthController(DBConnection context, IEmailService emailService)
+        private readonly IConfiguration _configuration;
+
+        public AuthController(DBConnection context, IEmailService emailService, IConfiguration configuration)
         {
             _context = context;
             _emailService = emailService;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -120,7 +123,8 @@ namespace GameAPI.Controllers
             // Отправка письма подтверждения, если email указан
             if (!string.IsNullOrWhiteSpace(user.Email))
             {
-                var confirmationLink = $"{Request.Scheme}://{Request.Host}/api/auth/confirm-email?token={user.EmailConfirmationToken}";
+                var publicBaseUrl = _configuration["AppSettings:PublicBaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
+                var confirmationLink = $"{publicBaseUrl.TrimEnd('/')}/api/auth/confirm-email?token={user.EmailConfirmationToken}";
                 await _emailService.SendConfirmationEmailAsync(user.Email, confirmationLink);
             }
 
@@ -207,11 +211,27 @@ namespace GameAPI.Controllers
             if (string.IsNullOrWhiteSpace(user.Email))
                 return BadRequest(new { message = "У вас не указан email." });
 
+            if (user.EmailConfirmationTokenExpires.HasValue)
+            {
+                DateTime lastSendTime = user.EmailConfirmationTokenExpires.Value.AddHours(-24);
+                double secondsSinceLastSend = (DateTime.UtcNow - lastSendTime).TotalSeconds;
+                if (secondsSinceLastSend < 60)
+                {
+                    int retryAfter = 60 - (int)secondsSinceLastSend;
+                    return BadRequest(new
+                    {
+                        message = $"Повторная отправка возможна через {retryAfter} сек.",
+                        retryAfterSeconds = retryAfter
+                    });
+                }
+            }
+
             user.EmailConfirmationToken = GenerateEmailConfirmationToken();
             user.EmailConfirmationTokenExpires = DateTime.UtcNow.AddHours(24);
             await _context.SaveChangesAsync();
 
-            var confirmationLink = $"{Request.Scheme}://{Request.Host}/api/auth/confirm-email?token={user.EmailConfirmationToken}";
+            var publicBaseUrl = _configuration["AppSettings:PublicBaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
+            var confirmationLink = $"{publicBaseUrl.TrimEnd('/')}/api/auth/confirm-email?token={user.EmailConfirmationToken}";
             await _emailService.SendConfirmationEmailAsync(user.Email, confirmationLink);
 
             return Ok(new { message = "Письмо отправлено повторно. Проверьте почту." });
@@ -247,7 +267,8 @@ namespace GameAPI.Controllers
             user.EmailConfirmationTokenExpires = DateTime.UtcNow.AddHours(24);
             await _context.SaveChangesAsync();
 
-            var confirmationLink = $"{Request.Scheme}://{Request.Host}/api/auth/confirm-email?token={user.EmailConfirmationToken}";
+            var publicBaseUrl = _configuration["AppSettings:PublicBaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
+            var confirmationLink = $"{publicBaseUrl.TrimEnd('/')}/api/auth/confirm-email?token={user.EmailConfirmationToken}";
             await _emailService.SendConfirmationEmailAsync(user.Email, confirmationLink);
 
             return Ok(new { message = "Письмо с подтверждением отправлено на указанный email." });
@@ -261,7 +282,7 @@ namespace GameAPI.Controllers
         private async Task CreateDefaultUserData(int userId)
         {
             // Кошелёк
-            _context.UserWallets.Add(new UserWallet { UserId = userId, Gold = 0, Silver = 0 });
+            _context.UserWallets.Add(new UserWallet { UserId = userId, Gold = 0});
 
             // Счёт
             _context.UserScores.Add(new UserScore { UserId = userId, BestScore = 0 });
@@ -338,6 +359,7 @@ namespace GameAPI.Controllers
                 .Select(u => new UserUpgradeDto { UpgradeId = u.UpgradeId, Level = u.Level })
                 .ToListAsync();
 
+
             // Доступность подарка: email подтверждён и прошло >=24 часа с последнего получения
             bool giftAvailable = user.EmailConfirmed && (user.Gift?.LastBonusDt == null ||
                 (DateTime.UtcNow - user.Gift.LastBonusDt.Value).TotalHours >= 24);
@@ -369,8 +391,13 @@ namespace GameAPI.Controllers
                 {
                     UpgradeId = ul.UpgradeId,
                     Level = ul.Level,
-                    PriceGold = ul.PriceGold,
-                    PriceSilver = ul.PriceSilver
+                    PriceGold = ul.PriceGold
+                }).ToListAsync(),
+                Upgrades = await _context.Upgrades.Select(u => new UpgradeConfigDto
+                {
+                    Id = u.Id,
+                    Name = u.Name,
+                    Description = u.Description
                 }).ToListAsync()
             };
 
@@ -384,7 +411,6 @@ namespace GameAPI.Controllers
                 EmailConfirmed = user.EmailConfirmed,
                 RegistrationDate = user.RegistrationDate,
                 Gold = user.Wallet?.Gold ?? 0,
-                Silver = user.Wallet?.Silver ?? 0,
                 BestScore = user.Score?.BestScore ?? 0,
                 Rank = rank,
                 GamesPlayed = stats?.GamesPlayedCount ?? 0,

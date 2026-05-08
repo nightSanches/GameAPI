@@ -36,7 +36,7 @@ builder.Services.AddRateLimiter(options =>
             });
         });
 
-    // Лимит 5 запросов на авторизацию в 1 мин. на IP
+    // Лимит 10 запросов на авторизацию в 1 мин. на IP
     options.AddPolicy("Login", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -47,7 +47,7 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             }));
 
-    // Лимит 3 запроса на регистрацию в 10 мин. на IP
+    // Лимит 10 запроса на регистрацию в 10 мин. на IP
     options.AddPolicy("Register", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -58,13 +58,13 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             }));
 
-    // Лимит 2 запроса на подтверждение почты в 15 мин. на IP
+    // Лимит 10 запроса на подтверждение почты в 15 мин. на IP
     options.AddPolicy("ResendConfirmation", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 2,
+                PermitLimit = 10,
                 Window = TimeSpan.FromMinutes(15),
                 QueueLimit = 0
             }));

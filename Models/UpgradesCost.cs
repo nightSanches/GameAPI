@@ -11,7 +11,5 @@ namespace GameAPI.Models
         public int Level { get; set; }
         [Column("Price_gold")]
         public int PriceGold { get; set; }
-        [Column("Price_silver")]
-        public int PriceSilver { get; set; }
     }
 }

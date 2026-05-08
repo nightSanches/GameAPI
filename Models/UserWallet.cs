@@ -9,7 +9,6 @@ namespace GameAPI.Models
         [Column("User_id")]
         public int UserId { get; set; }
         public int Gold { get; set; }
-        public int Silver { get; set; }
         public User User { get; set; }
     }
 }

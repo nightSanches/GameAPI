@@ -3,7 +3,6 @@
     public class GameEndResponse
     {
         public int Gold { get; set; }
-        public int Silver { get; set; }
         public int BestScore { get; set; }
         public int Rank { get; set; }
         public int GamesPlayed { get; set; }

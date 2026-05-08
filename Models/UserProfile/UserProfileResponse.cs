@@ -25,7 +25,6 @@ namespace GameAPI.Models.UserProfile
     public class WalletInfo
     {
         public int Gold { get; set; }
-        public int Silver { get; set; }
     }
 
     public class ScoreInfo

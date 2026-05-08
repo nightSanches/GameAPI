@@ -68,7 +68,6 @@ namespace GameAPI.Classes
                 entity.ToTable("Upgrades");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                // Цены удалены – больше не мапим PriceGold/PriceSilver
             });
 
             // --- Upgrades_cost ---
@@ -79,7 +78,6 @@ namespace GameAPI.Classes
                 entity.Property(e => e.UpgradeId).IsRequired();
                 entity.Property(e => e.Level).HasDefaultValue(1);
                 entity.Property(e => e.PriceGold).HasDefaultValue(0);
-                entity.Property(e => e.PriceSilver).HasDefaultValue(0);
 
                 entity.HasOne<Upgrade>()
                       .WithMany()
@@ -155,7 +153,6 @@ namespace GameAPI.Classes
                       .HasForeignKey<UserWallet>(e => e.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
                 entity.Property(e => e.Gold).HasDefaultValue(0);
-                entity.Property(e => e.Silver).HasDefaultValue(0);
             });
 
             // --- Users_stats ---
