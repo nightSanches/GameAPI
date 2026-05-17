@@ -53,3 +53,4 @@ $RECYCLE.BIN/
 *.tmp
 *.temp
 ```
+/.vs/GameAPI/config
