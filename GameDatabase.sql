@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1:3316
--- Время создания: Май 17 2026 г., 15:14
+-- Время создания: Май 17 2026 г., 16:30
 -- Версия сервера: 8.0.30
 -- Версия PHP: 7.2.34
 
@@ -57,14 +57,14 @@ CREATE TABLE `Bonuses` (
   `Id` int NOT NULL,
   `Name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `Description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
-  `Price_gold` int NOT NULL DEFAULT '0'
+  `Price_money` int NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Дамп данных таблицы `Bonuses`
 --
 
-INSERT INTO `Bonuses` (`Id`, `Name`, `Description`, `Price_gold`) VALUES
+INSERT INTO `Bonuses` (`Id`, `Name`, `Description`, `Price_money`) VALUES
 (1, 'Стабилизатор', 'Временно уменьшает шатание крана', 50),
 (2, 'Регулировка', 'Временно выравнивает небоскрёб по центру', 50),
 (3, 'Страховка', 'Временно даёт неуязвимость от ошибок', 50);
@@ -127,14 +127,14 @@ CREATE TABLE `Upgrades_cost` (
   `Id` int NOT NULL,
   `Upgrade_id` int NOT NULL,
   `Level` int NOT NULL DEFAULT '1',
-  `Price_gold` int NOT NULL DEFAULT '0'
+  `Price_money` int NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Дамп данных таблицы `Upgrades_cost`
 --
 
-INSERT INTO `Upgrades_cost` (`Id`, `Upgrade_id`, `Level`, `Price_gold`) VALUES
+INSERT INTO `Upgrades_cost` (`Id`, `Upgrade_id`, `Level`, `Price_money`) VALUES
 (1, 1, 1, 10),
 (2, 1, 2, 20),
 (3, 1, 3, 30),
@@ -232,7 +232,8 @@ INSERT INTO `Users` (`Id`, `Nickname`, `Password`, `Role`, `Token`, `Email`, `Re
 (56, 'Player_56', 'hashedpassword', 'player', NULL, NULL, '2026-04-27 19:28:57', 0, NULL, NULL),
 (62, 'testtest', '$2a$11$AIVRRE7zdVlOZzuDHLwVM.axCddubJFLUCVyyaa5cel.nGvP.iZZi', 'player', 'MjKs1DvLjXAX5aaovZbSET5mQZ8fYlrCQBzxeEH49jNGxVBRIDRmGvvyCnTqjEGlTfC8kDBHmXfylgEsAT9veaHrKp9ZpM1tph4a', NULL, '2026-05-05 13:48:26', 0, NULL, NULL),
 (63, 'bebra', '$2a$11$RPeeZIxR5qPjfcWguKOeq.f9Ulm0G3/9omqtwE6Zl1f.Vm3Ej94VS', 'player', 'gGyVIIaAVTLOzcXhHG2dPMAp4bfrPzS1DxUM78g2O06hO2StDsNJVF7A2SrHGkP2VQoo83x5StkSZwh0yUX8T9BRZb3HqDpuyDOM', NULL, '2026-05-05 23:21:48', 0, 'c8e01f440325429b8d5e529a9106ce6eMjsnLPApEUmWpoCQzhPrg', '2026-05-07 02:21:48'),
-(64, 'sanich', '$2a$11$s04Lgx0S9HUX1ES/YmZbeOo03uSVYbbWZCrswQrZO4plzH.0yFphq', 'player', 'ZRyLS6NI6CjcPPtFNCuqc7glMnaee55BeHimMp5UXInj8MCzjYRlD3CUWqfPxl83RrdhHNByPUfWbbE4xpd35EEftWlCmZdtvj46', NULL, '2026-05-08 15:40:30', 0, NULL, NULL);
+(64, 'sanich', '$2a$11$s04Lgx0S9HUX1ES/YmZbeOo03uSVYbbWZCrswQrZO4plzH.0yFphq', 'player', 'ZRyLS6NI6CjcPPtFNCuqc7glMnaee55BeHimMp5UXInj8MCzjYRlD3CUWqfPxl83RrdhHNByPUfWbbE4xpd35EEftWlCmZdtvj46', NULL, '2026-05-08 15:40:30', 0, NULL, NULL),
+(75, 'admin', '$2a$11$EesOnvGqS6rasWdU2QGu5ehEFkk03n2lV3HsMlMlkievh6pPuI9m.', 'player', 'WPWr6cJGBSgXdnI8gctv1AlrO6QmYrqeRYQzNR3MShGmgpBrhLxTPh3GLFWlKtiCMrRqJ4cRDBGFELfo8dI7pfiRJan3Vs6VlsyW', 'u246012@gmail.com', '2026-05-17 10:10:57', 0, '8854bc6403a6493ba91913ff0f29e48951luooZ1y0iMSIRmuqC63A', '2026-05-18 13:10:57');
 
 -- --------------------------------------------------------
 
@@ -317,7 +318,7 @@ CREATE TABLE `Users_scores` (
 INSERT INTO `Users_scores` (`Id`, `User_id`, `District_Id`, `Best_score`) VALUES
 (1, 1, 1, 9999),
 (2, 2, 1, 9500),
-(3, 3, 1, 9300),
+(3, 3, 2, 9300),
 (4, 4, 1, 9300),
 (5, 5, 1, 8700),
 (6, 6, 1, 8450),
@@ -584,7 +585,7 @@ ALTER TABLE `Upgrades_cost`
 -- AUTO_INCREMENT для таблицы `Users`
 --
 ALTER TABLE `Users`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_achievements`
