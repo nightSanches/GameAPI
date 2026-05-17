@@ -51,48 +51,8 @@ namespace GameAPI.Controllers
             stats.BlocksPlacedCount += request.BlocksPlaced;
             stats.IBlocksPlacedCount += request.PerfectBlocks;
 
-            // Обновляем прогресс достижений
-            var achievements = await _context.Achievements
-                .Where(a => a.DistrictId == request.DistrictId)
-                .ToListAsync();
-
-            var userAchievements = await _context.UserAchievements
-                .Where(ua => ua.UserId == user.Id)
-                .ToListAsync();
-
-            foreach (var achievement in achievements)
-            {
-                var userAchievement = userAchievements.FirstOrDefault(ua => ua.AchievementId == achievement.Id);
-                if (userAchievement == null || userAchievement.IsUnlocked)
-                    continue;
-
-                int newProgress = 0;
-                switch (achievement.ConditionType.ToLower())
-                {
-                    case "max_floor":
-                        newProgress = request.MaxFloor;
-                        break;
-                    case "perfect_streak":
-                        newProgress = request.PerfectStreak;
-                        break;
-                    case "games_played":
-                        newProgress = stats.GamesPlayedCount;
-                        break;
-                }
-
-                if (newProgress > userAchievement.CurrentProgress)
-                {
-                    userAchievement.CurrentProgress = newProgress;
-
-                    // Проверяем, достигнуто ли условие
-                    if (userAchievement.CurrentProgress >= achievement.ConditionValue)
-                    {
-                        userAchievement.IsUnlocked = true;
-                        // Начисляем награду за достижение
-                        wallet.Reputation += achievement.RewardRep;
-                    }
-                }
-            }
+            // Обновляем прогресс достижений через отдельный метод
+            await UpdateAchievementsAsync(user.Id, request.DistrictId, request.AchievementProgresses, stats, wallet);
 
             await _context.SaveChangesAsync();
 
@@ -166,6 +126,70 @@ namespace GameAPI.Controllers
             };
 
             return Ok(response);
+        }
+
+        /// <summary>
+        /// Обновляет прогресс достижений игрока на основе переданных значений прогресса.
+        /// Метод работает с любыми записями достижений, используя тип условия (ConditionType) для определения логики обновления.
+        /// </summary>
+        /// <param name="userId">ID пользователя</param>
+        /// <param name="districtId">ID района, для которого обновляются достижения</param>
+        /// <param name="achievementProgresses">Словарь с прогрессом по типам условий (ключ - ConditionType, значение - текущий прогресс)</param>
+        /// <param name="stats">Статистика пользователя</param>
+        /// <param name="wallet">Кошелёк пользователя (для начисления награды при разблокировке достижения)</param>
+        private async Task UpdateAchievementsAsync(int userId, int districtId, Dictionary<string, int> achievementProgresses, UserStats stats, UserWallet wallet)
+        {
+            // Получаем все достижения для указанного района
+            var achievements = await _context.Achievements
+                .Where(a => a.DistrictId == districtId)
+                .ToListAsync();
+
+            // Получаем все достижения пользователя
+            var userAchievements = await _context.UserAchievements
+                .Where(ua => ua.UserId == userId)
+                .ToDictionaryAsync(ua => ua.AchievementId);
+
+            foreach (var achievement in achievements)
+            {
+                // Пропускаем уже разблокированные достижения
+                if (userAchievements.TryGetValue(achievement.Id, out var userAchievement) && userAchievement.IsUnlocked)
+                    continue;
+
+                // Если достижения ещё нет у пользователя, создаём новую запись
+                if (userAchievement == null)
+                {
+                    userAchievement = new UserAchievement
+                    {
+                        UserId = userId,
+                        AchievementId = achievement.Id,
+                        CurrentProgress = 0,
+                        IsUnlocked = false
+                    };
+                    _context.UserAchievements.Add(userAchievement);
+                    userAchievements[achievement.Id] = userAchievement;
+                }
+
+                // Получаем новый прогресс из переданного словаря по типу условия
+                int newProgress = 0;
+                if (achievementProgresses.TryGetValue(achievement.ConditionType, out var progressValue))
+                {
+                    newProgress = progressValue;
+                }
+
+                // Обновляем прогресс только если он больше текущего
+                if (newProgress > userAchievement.CurrentProgress)
+                {
+                    userAchievement.CurrentProgress = newProgress;
+
+                    // Проверяем, достигнуто ли условие
+                    if (userAchievement.CurrentProgress >= achievement.ConditionValue)
+                    {
+                        userAchievement.IsUnlocked = true;
+                        // Начисляем награду за достижение
+                        wallet.Reputation += achievement.RewardRep;
+                    }
+                }
+            }
         }
 
         private async Task<User> GetUserByToken(string authToken)
