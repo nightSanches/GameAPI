@@ -1,9 +1,8 @@
-﻿using GameAPI.Classes;
+using GameAPI.Classes;
 using GameAPI.Models;
 using GameAPI.Models.Game;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using static GameAPI.Models.Authentification.FullLoginResponse;
 
 namespace GameAPI.Controllers
 {
@@ -97,46 +96,64 @@ namespace GameAPI.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Вычисляем новое место игрока (dense rank по лучшему счету среди всех районов)
-            var allUserScores = await _context.UserScores
-                .Where(s => s.UserId == user.Id)
-                .ToListAsync();
-            int bestScoreOverall = allUserScores.Any() ? allUserScores.Max(s => s.BestScore) : 0;
+            // Получаем актуальные счета по районам и вычисляем ранги для каждого района
+            var allDistricts = await _context.Districts.ToListAsync();
+            var scoresByDistrict = new List<ScoreByDistrictDto>();
+            var districtRanks = new List<DistrictRankDto>();
 
-            int rank = 1;
-            if (bestScoreOverall > 0)
+            foreach (var district in allDistricts)
             {
-                var allBestScores = await _context.UserScores
-                    .GroupBy(s => s.UserId)
-                    .Select(g => g.Max(s => s.BestScore))
-                    .Distinct()
-                    .OrderByDescending(s => s)
-                    .ToListAsync();
-                rank = allBestScores.FindIndex(s => s == bestScoreOverall) + 1;
-            }
+                var userScoreRecord = await _context.UserScores
+                    .FirstOrDefaultAsync(s => s.UserId == user.Id && s.DistrictId == district.Id);
+                var bestScoreForDistrict = userScoreRecord?.BestScore ?? 0;
 
-            // Получаем актуальные счета по районам
-            var scoresByDistrict = await _context.UserScores
-                .Where(s => s.UserId == user.Id)
-                .Select(s => new ScoreByDistrictDto
+                scoresByDistrict.Add(new ScoreByDistrictDto
                 {
-                    DistrictId = s.DistrictId,
-                    BestScore = s.BestScore
-                })
-                .ToListAsync();
+                    DistrictId = district.Id,
+                    BestScore = bestScoreForDistrict
+                });
+
+                // Вычисляем dense rank для этого района
+                int rankForDistrict = 1;
+                if (bestScoreForDistrict > 0)
+                {
+                    var allScoresForDistrict = await _context.UserScores
+                        .Where(s => s.DistrictId == district.Id)
+                        .OrderByDescending(s => s.BestScore)
+                        .Select(s => s.BestScore)
+                        .Distinct()
+                        .ToListAsync();
+                    rankForDistrict = allScoresForDistrict.TakeWhile(s => s > bestScoreForDistrict).Count() + 1;
+                }
+                else
+                {
+                    var hasAnyScore = await _context.UserScores
+                        .Where(s => s.DistrictId == district.Id && s.BestScore > 0)
+                        .AnyAsync();
+                    rankForDistrict = hasAnyScore 
+                        ? await _context.UserScores.Where(s => s.DistrictId == district.Id).Select(s => s.BestScore).Distinct().CountAsync() + 1 
+                        : 1;
+                }
+
+                districtRanks.Add(new DistrictRankDto
+                {
+                    DistrictId = district.Id,
+                    BestScore = bestScoreForDistrict,
+                    Rank = rankForDistrict
+                });
+            }
 
             // Возвращаем обновлённые данные
             var response = new GameEndResponse
             {
                 Money = wallet.Money,
                 Reputation = wallet.Reputation,
-                BestScore = bestScoreOverall,
-                Rank = rank,
                 GamesPlayed = stats.GamesPlayedCount,
                 BlocksPlaced = stats.BlocksPlacedCount,
                 PerfectBlocks = stats.IBlocksPlacedCount,
                 IsNewRecord = isNewRecord,
                 ScoresByDistrict = scoresByDistrict,
+                DistrictRanks = districtRanks,
                 Achievements = await _context.UserAchievements
                     .Where(ua => ua.UserId == user.Id)
                     .Select(ua => new UserAchievementDto

@@ -1,4 +1,4 @@
-﻿namespace GameAPI.Models.Authentification
+namespace GameAPI.Models.Authentification
 {
     public class FullLoginResponse
     {
@@ -14,10 +14,6 @@
         // Ресурсы
         public int Money { get; set; }
         public int Reputation { get; set; }
-
-        // Рекорд и место
-        public int BestScore { get; set; }
-        public int Rank { get; set; }  // место в dense rank
 
         // Статистика
         public int GamesPlayed { get; set; }
@@ -45,6 +41,9 @@
         // Счета по районам
         public List<ScoreByDistrictDto> ScoresByDistrict { get; set; }
 
+        // Рекорд и ранг по каждому району
+        public List<DistrictRankDto> DistrictRanks { get; set; }
+
         // Вспомогательные DTO для владения
         public class UserBonusDto
         {
@@ -69,6 +68,13 @@
         {
             public int DistrictId { get; set; }
             public int BestScore { get; set; }
+        }
+
+        public class DistrictRankDto
+        {
+            public int DistrictId { get; set; }
+            public int BestScore { get; set; }
+            public int Rank { get; set; }  // место в dense rank для этого района
         }
 
         public class StoreConfigDto

@@ -449,20 +449,47 @@ namespace GameAPI.Controllers
                 })
                 .ToListAsync();
 
-            // Общий лучший счёт среди всех районов
-            int bestScoreOverall = userScores.Any() ? userScores.Max(s => s.BestScore) : 0;
+            // Счета по районам и ранги для каждого района
+            var allDistricts = await _context.Districts.ToListAsync();
+            var scoresByDistrict = new List<ScoreByDistrictDto>();
+            var districtRanks = new List<DistrictRankDto>();
 
-            // Ранг игрока (dense rank) по лучшему счету
-            int rank = 1;
-            if (bestScoreOverall > 0)
+            foreach (var district in allDistricts)
             {
-                var allBestScores = await _context.UserScores
-                    .GroupBy(s => s.UserId)
-                    .Select(g => g.Max(s => s.BestScore))
-                    .Distinct()
-                    .OrderByDescending(s => s)
-                    .ToListAsync();
-                rank = allBestScores.FindIndex(s => s == bestScoreOverall) + 1;
+                var userScore = userScores.FirstOrDefault(s => s.DistrictId == district.Id) ?? new UserScore { DistrictId = district.Id, BestScore = 0 };
+                scoresByDistrict.Add(new ScoreByDistrictDto
+                {
+                    DistrictId = district.Id,
+                    BestScore = userScore.BestScore
+                });
+
+                // Вычисляем dense rank для этого района
+                int rankForDistrict = 1;
+                if (userScore.BestScore > 0)
+                {
+                    var allScoresForDistrict = await _context.UserScores
+                        .Where(s => s.DistrictId == district.Id)
+                        .OrderByDescending(s => s.BestScore)
+                        .Select(s => s.BestScore)
+                        .Distinct()
+                        .ToListAsync();
+                    rankForDistrict = allScoresForDistrict.TakeWhile(s => s > userScore.BestScore).Count() + 1;
+                }
+                else
+                {
+                    // Если счёт 0, проверяем, есть ли игроки с 0 очками
+                    var hasAnyScore = await _context.UserScores
+                        .Where(s => s.DistrictId == district.Id && s.BestScore > 0)
+                        .AnyAsync();
+                    rankForDistrict = hasAnyScore ? await _context.UserScores.Where(s => s.DistrictId == district.Id).Select(s => s.BestScore).Distinct().CountAsync() + 1 : 1;
+                }
+
+                districtRanks.Add(new DistrictRankDto
+                {
+                    DistrictId = district.Id,
+                    BestScore = userScore.BestScore,
+                    Rank = rankForDistrict
+                });
             }
 
             return new FullLoginResponse
@@ -476,8 +503,6 @@ namespace GameAPI.Controllers
                 RegistrationDate = user.RegistrationDate,
                 Money = user.Wallet?.Money ?? 0,
                 Reputation = user.Wallet?.Reputation ?? 0,
-                BestScore = bestScoreOverall,
-                Rank = rank,
                 GamesPlayed = stats?.GamesPlayedCount ?? 0,
                 BlocksPlaced = stats?.BlocksPlacedCount ?? 0,
                 PerfectBlocks = stats?.IBlocksPlacedCount ?? 0,
@@ -489,11 +514,8 @@ namespace GameAPI.Controllers
                 StoreConfig = storeConfig,
                 Districts = districts,
                 AchievementsConfig = achievementsConfig,
-                ScoresByDistrict = userScores.Select(s => new ScoreByDistrictDto
-                {
-                    DistrictId = s.DistrictId,
-                    BestScore = s.BestScore
-                }).ToList()
+                ScoresByDistrict = scoresByDistrict,
+                DistrictRanks = districtRanks
             };
         }
 

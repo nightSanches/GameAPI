@@ -1,47 +1,55 @@
-```
-# Build artifacts
-*.dll
-*.exe
-*.pdb
-*.obj
-*.o
-*.so
-*.a
-bin/
-obj/
-out/
+```csharp
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Dd]epends/
+intermediate/
+[Bb]in/
+[Oo]bj/
 
-# Dependencies
-packages/
-node_modules/
-venv/
-.venv/
-__pycache__/
-*.egg-info/
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.csproj.user
+*.vbproj.user
+*.fsproj.user
+*.userprefs
 
-# Logs
+# Log files
 *.log
 
-# Environment
+# Visual Studio Code
+.vscode/
+
+# Environment specific configurations
 .env
 .env.local
 *.env.*
 
-# Editors
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
+# Package management
+packages/
+[Pp]ackage[sS]/
+project.lock.json
+project.fragment.lock.json
+artifacts/
 
-# OS
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-
-# Testing
-coverage/
-htmlcov/
-.coverage
-*.cover
-.nyc_output/
+desktop.ini
+$RECYCLE.BIN/
+*.backup.rdb
+*.rdb
+*.tmp
+*.temp
 ```
