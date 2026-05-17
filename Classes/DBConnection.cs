@@ -8,6 +8,8 @@ namespace GameAPI.Classes
         public DbSet<User> Users { get; set; }
         public DbSet<Bonus> Bonuses { get; set; }
         public DbSet<Upgrade> Upgrades { get; set; }
+        public DbSet<District> Districts { get; set; }
+        public DbSet<Achievement> Achievements { get; set; }
         public DbSet<UserBonus> UserBonuses { get; set; }
         public DbSet<UserGift> UserGifts { get; set; }
         public DbSet<UserScore> UserScores { get; set; }
@@ -15,6 +17,7 @@ namespace GameAPI.Classes
         public DbSet<UserWallet> UserWallets { get; set; }
         public DbSet<UpgradesCost> UpgradesCosts { get; set; }
         public DbSet<UserStats> UserStatss { get; set; }
+        public DbSet<UserAchievement> UserAchievements { get; set; }
 
         public DBConnection()
         {
@@ -168,6 +171,85 @@ namespace GameAPI.Classes
                 entity.Property(e => e.GamesPlayedCount).HasDefaultValue(0);
                 entity.Property(e => e.BlocksPlacedCount).HasDefaultValue(0);
                 entity.Property(e => e.IBlocksPlacedCount).HasDefaultValue(0);
+            });
+
+            // --- Districts ---
+            modelBuilder.Entity<District>(entity =>
+            {
+                entity.ToTable("Districts");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.UnlockRepReq).HasDefaultValue(0);
+                entity.Property(e => e.DifficultyMultiplier).HasDefaultValue(1.0m);
+                entity.Property(e => e.SortOrder).HasDefaultValue(0);
+            });
+
+            // --- Achievements ---
+            modelBuilder.Entity<Achievement>(entity =>
+            {
+                entity.ToTable("Achievements");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).IsRequired();
+                entity.Property(e => e.ConditionType).IsRequired();
+                entity.Property(e => e.ConditionValue).HasDefaultValue(0);
+                entity.Property(e => e.RewardRep).HasDefaultValue(0);
+
+                entity.HasOne<District>()
+                      .WithMany()
+                      .HasForeignKey(e => e.DistrictId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // --- Users_achievements ---
+            modelBuilder.Entity<UserAchievement>(entity =>
+            {
+                entity.ToTable("Users_achievements");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.CurrentProgress).HasDefaultValue(0);
+                entity.Property(e => e.IsUnlocked).HasDefaultValue(false);
+
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Achievement)
+                      .WithMany()
+                      .HasForeignKey(e => e.AchievementId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // --- Users_scores (composite key for district scores) ---
+            modelBuilder.Entity<UserScore>(entity =>
+            {
+                entity.ToTable("Users_scores");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.BestScore).IsRequired();
+
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.District)
+                      .WithMany()
+                      .HasForeignKey(e => e.DistrictId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // --- Users_wallet ---
+            modelBuilder.Entity<UserWallet>(entity =>
+            {
+                entity.ToTable("Users_wallet");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.UserId).IsUnique();
+                entity.HasOne(e => e.User)
+                      .WithOne(u => u.Wallet)
+                      .HasForeignKey<UserWallet>(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.Property(e => e.Gold).HasDefaultValue(0);
+                entity.Property(e => e.Reputation).HasDefaultValue(0);
             });
         }
     }

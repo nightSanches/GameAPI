@@ -283,10 +283,19 @@ namespace GameAPI.Controllers
         private async Task CreateDefaultUserData(int userId)
         {
             // Кошелёк
-            _context.UserWallets.Add(new UserWallet { UserId = userId, Gold = 0});
+            _context.UserWallets.Add(new UserWallet { UserId = userId, Gold = 0, Reputation = 0 });
 
-            // Счёт
-            _context.UserScores.Add(new UserScore { UserId = userId, BestScore = 0 });
+            // Счёт для каждого района
+            var allDistricts = await _context.Districts.ToListAsync();
+            foreach (var district in allDistricts)
+            {
+                _context.UserScores.Add(new UserScore 
+                { 
+                    UserId = userId, 
+                    DistrictId = district.Id, 
+                    BestScore = 0 
+                });
+            }
 
             // Подарки
             _context.UserGifts.Add(new UserGift { UserId = userId, LastBonusDt = null });
@@ -318,6 +327,19 @@ namespace GameAPI.Controllers
                 });
             }
 
+            // Достижения – для каждого достижения создаём запись с прогрессом 0
+            var allAchievements = await _context.Achievements.ToListAsync();
+            foreach (var achievement in allAchievements)
+            {
+                _context.UserAchievements.Add(new UserAchievement
+                {
+                    UserId = userId,
+                    AchievementId = achievement.Id,
+                    CurrentProgress = 0,
+                    IsUnlocked = false
+                });
+            }
+
             await _context.SaveChangesAsync();
         }
         /// <summary>
@@ -328,24 +350,32 @@ namespace GameAPI.Controllers
             // Подгружаем связанные данные, если они не включены
             if (user.Wallet == null)
                 user.Wallet = await _context.UserWallets.FirstOrDefaultAsync(w => w.UserId == user.Id);
-            if (user.Score == null)
-                user.Score = await _context.UserScores.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            
+            // Счета по всем районам
+            var userScores = await _context.UserScores
+                .Where(s => s.UserId == user.Id)
+                .ToListAsync();
+            
             if (user.Gift == null)
                 user.Gift = await _context.UserGifts.FirstOrDefaultAsync(g => g.UserId == user.Id);
 
             // Статистика
             var stats = await _context.UserStatss.FirstOrDefaultAsync(s => s.UserId == user.Id);
 
-            // Ранг игрока (dense rank)
+            // Общий лучший рекорд среди всех районов
+            int bestScoreOverall = userScores.Any() ? userScores.Max(s => s.BestScore) : 0;
+
+            // Ранг игрока (dense rank) по лучшему рекорду
             int rank = 1;
-            if (user.Score != null)
+            if (userScores.Any())
             {
-                var scores = await _context.UserScores
-                    .Select(s => s.BestScore)
+                var allBestScores = await _context.UserScores
+                    .GroupBy(s => s.UserId)
+                    .Select(g => g.Max(s => s.BestScore))
                     .Distinct()
                     .OrderByDescending(s => s)
                     .ToListAsync();
-                rank = scores.FindIndex(s => s == user.Score.BestScore) + 1;
+                rank = allBestScores.FindIndex(s => s == bestScoreOverall) + 1;
             }
 
             // Бонусы
@@ -360,6 +390,28 @@ namespace GameAPI.Controllers
                 .Select(u => new UserUpgradeDto { UpgradeId = u.UpgradeId, Level = u.Level })
                 .ToListAsync();
 
+            // Достижения
+            var achievements = await _context.UserAchievements
+                .Where(a => a.UserId == user.Id)
+                .Select(a => new UserAchievementDto 
+                { 
+                    AchievementId = a.AchievementId, 
+                    CurrentProgress = a.CurrentProgress,
+                    IsUnlocked = a.IsUnlocked
+                })
+                .ToListAsync();
+
+            // Районы (конфигурация)
+            var districts = await _context.Districts
+                .OrderBy(d => d.SortOrder)
+                .Select(d => new DistrictDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    UnlockRepReq = d.UnlockRepReq,
+                    DifficultyMultiplier = d.DifficultyMultiplier
+                })
+                .ToListAsync();
 
             // Доступность подарка: email подтверждён и прошло >=8 часа с последнего получения
             bool giftAvailable = user.EmailConfirmed && (user.Gift?.LastBonusDt == null ||
@@ -412,13 +464,16 @@ namespace GameAPI.Controllers
                 EmailConfirmed = user.EmailConfirmed,
                 RegistrationDate = user.RegistrationDate,
                 Gold = user.Wallet?.Gold ?? 0,
-                BestScore = user.Score?.BestScore ?? 0,
+                Reputation = user.Wallet?.Reputation ?? 0,
+                BestScore = bestScoreOverall,
                 Rank = rank,
                 GamesPlayed = stats?.GamesPlayedCount ?? 0,
                 BlocksPlaced = stats?.BlocksPlacedCount ?? 0,
                 PerfectBlocks = stats?.IBlocksPlacedCount ?? 0,
                 Bonuses = bonuses,
                 Upgrades = upgrades,
+                Achievements = achievements,
+                Districts = districts,
                 SecondsUntilNextGift = secondsUntilNextGift,
                 GiftAvailable = giftAvailable,
                 StoreConfig = storeConfig

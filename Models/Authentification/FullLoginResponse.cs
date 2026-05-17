@@ -13,6 +13,7 @@
 
         // Ресурсы
         public int Gold { get; set; }
+        public int Reputation { get; set; }
 
         // Рекорд и место
         public int BestScore { get; set; }
@@ -26,6 +27,10 @@
         // Владения
         public List<UserBonusDto> Bonuses { get; set; }
         public List<UserUpgradeDto> Upgrades { get; set; }
+        public List<UserAchievementDto> Achievements { get; set; }
+
+        // Конфигурация районов
+        public List<DistrictDto> Districts { get; set; }
 
         // Подарок
         public int SecondsUntilNextGift { get; set; }
@@ -45,6 +50,21 @@
         {
             public int UpgradeId { get; set; }
             public int Level { get; set; }
+        }
+
+        public class UserAchievementDto
+        {
+            public int AchievementId { get; set; }
+            public int CurrentProgress { get; set; }
+            public bool IsUnlocked { get; set; }
+        }
+
+        public class DistrictDto
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public int UnlockRepReq { get; set; }
+            public decimal DifficultyMultiplier { get; set; }
         }
 
         public class StoreConfigDto

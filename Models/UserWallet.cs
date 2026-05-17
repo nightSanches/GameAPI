@@ -9,6 +9,9 @@ namespace GameAPI.Models
         [Column("User_id")]
         public int UserId { get; set; }
         public int Gold { get; set; }
+        public int Reputation { get; set; }
+        
+        // Навигационные свойства
         public User User { get; set; }
     }
 }
