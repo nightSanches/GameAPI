@@ -54,3 +54,10 @@ $RECYCLE.BIN/
 *.temp
 ```
 /.vs/GameAPI/config
+/.vs/ProjectEvaluation/gameapi.metadata.v9.bin
+/.vs/ProjectEvaluation/gameapi.projects.v9.bin
+/.vs/ProjectEvaluation/gameapi.strings.v9.bin
+/.vs/GameAPI/FileContentIndex
+/.vs/GameAPI/DesignTimeBuild
+*.v2
+*.json
