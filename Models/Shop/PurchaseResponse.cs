@@ -1,5 +1,4 @@
-﻿using GameAPI.Models.UserProfile;
-using static GameAPI.Models.Authentification.FullLoginResponse;
+﻿using static GameAPI.Models.Authentification.FullLoginResponse;
 
 namespace GameAPI.Models.Shop
 {
