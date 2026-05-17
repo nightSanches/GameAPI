@@ -16,9 +16,14 @@ namespace GameAPI.Controllers
     {
         private readonly DBConnection _context;
         private readonly IEmailService _emailService;
-
         private readonly IConfiguration _configuration;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера аутентификации.
+        /// </summary>
+        /// <param name="context">Контекст базы данных</param>
+        /// <param name="emailService">Сервис отправки email</param>
+        /// <param name="configuration">Конфигурация приложения</param>
         public AuthController(DBConnection context, IEmailService emailService, IConfiguration configuration)
         {
             _context = context;
@@ -27,8 +32,11 @@ namespace GameAPI.Controllers
         }
 
         /// <summary>
-        /// Вход в систему по никнейму или email
+        /// Выполняет вход в систему по никнейму или email.
+        /// Проверяет учетные данные и генерирует новый токен сессии.
         /// </summary>
+        /// <param name="request">Данные для входа (никнейм/email и пароль)</param>
+        /// <returns>Полный профиль пользователя при успешном входе или ошибка аутентификации</returns>
         [HttpPost("login")]
         [EnableRateLimiting("Login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -64,8 +72,11 @@ namespace GameAPI.Controllers
         }
 
         /// <summary>
-        /// Регистрация нового пользователя
+        /// Регистрирует нового пользователя в системе.
+        /// Проверяет уникальность никнейма и email, создает учетную запись и отправляет письмо подтверждения.
         /// </summary>
+        /// <param name="request">Данные для регистрации (никнейм, email, пароль)</param>
+        /// <returns>Полный профиль зарегистрированного пользователя</returns>
         [HttpPost("register")]
         [EnableRateLimiting("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
@@ -136,8 +147,11 @@ namespace GameAPI.Controllers
         }
 
         /// <summary>
-        /// Подтверждение email по токену из письма (возвращает HTML-страницу)
+        /// Подтверждает email пользователя по токену из письма.
+        /// Возвращает HTML-страницу с результатом подтверждения.
         /// </summary>
+        /// <param name="token">Токен подтверждения email</param>
+        /// <returns>HTML-страница с сообщением об успехе или ошибке</returns>
         [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
         {
@@ -195,8 +209,11 @@ namespace GameAPI.Controllers
         }
 
         /// <summary>
-        /// Повторная отправка письма подтверждения email
+        /// Повторно отправляет письмо подтверждения email для текущего пользователя.
+        /// Проверяет лимит времени между отправками (не чаще 1 раза в минуту).
         /// </summary>
+        /// <param name="authToken">Токен аутентификации пользователя</param>
+        /// <returns>Статус операции и сообщение, либо время ожидания до следующей отправки</returns>
         [HttpPost("resend-confirmation")]
         [EnableRateLimiting("ResendConfirmation")]
         public async Task<IActionResult> ResendConfirmation([FromQuery] string authToken)
@@ -278,8 +295,10 @@ namespace GameAPI.Controllers
         // ==================== Вспомогательные методы ====================
 
         /// <summary>
-        /// Создаёт все необходимые записи в связанных таблицах для нового пользователя
+        /// Создает все необходимые записи в связанных таблицах для нового пользователя.
+        /// Инициализирует кошелек, подарки, статистику, бонусы, улучшения, достижения и счета по районам.
         /// </summary>
+        /// <param name="userId">ID newly созданного пользователя</param>
         private async Task CreateDefaultUserData(int userId)
         {
             // Кошелёк
@@ -343,8 +362,12 @@ namespace GameAPI.Controllers
             await _context.SaveChangesAsync();
         }
         /// <summary>
-        /// Формирует полный профиль игрока для ответа
+        /// Формирует полный профиль игрока для ответа при входе/регистрации.
+        /// Включает данные пользователя, кошелек, статистику, бонусы, улучшения, достижения,
+        /// конфигурацию магазина, районы, счета и ранги по районам.
         /// </summary>
+        /// <param name="user">Объект пользователя</param>
+        /// <returns>Полный профиль пользователя со всеми связанными данными</returns>
         private async Task<FullLoginResponse> BuildFullLoginResponse(User user)
         {
             // Подгружаем связанные данные, если они не включены
@@ -540,7 +563,12 @@ namespace GameAPI.Controllers
             return await _context.Users.FirstOrDefaultAsync(u => u.Token == token);
         }
 
-        // Генерация случайного токена (из примера)
+        /// <summary>
+        /// Генерирует случайный токен заданной длины для сессии пользователя.
+        /// Использует алфавитно-цифровые символы и перемешивание для большей случайности.
+        /// </summary>
+        /// <param name="length">Длина генерируемого токена</param>
+        /// <returns>Случайная строка токена</returns>
         private string GenerateRandomToken(int length)
         {
             const string validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
@@ -557,7 +585,11 @@ namespace GameAPI.Controllers
             return new string(chars);
         }
 
-        // Генерация токена подтверждения email (из примера)
+        /// <summary>
+        /// Генерирует уникальный токен подтверждения email.
+        /// Комбинирует GUID и случайную Base64-строку для обеспечения уникальности.
+        /// </summary>
+        /// <returns>Строка токена подтверждения email</returns>
         private string GenerateEmailConfirmationToken()
         {
             var guid = Guid.NewGuid().ToString("N");
@@ -566,7 +598,11 @@ namespace GameAPI.Controllers
             return guid + randomPart;
         }
 
-        // HTML-страницы для подтверждения email
+        /// <summary>
+        /// Генерирует HTML-страницу с сообщением об успешном подтверждении email.
+        /// </summary>
+        /// <param name="message">Текст сообщения для отображения</param>
+        /// <returns>HTML-строка страницы успеха</returns>
         private string GetSuccessHtml(string message) => $@"
             <!DOCTYPE html>
             <meta charset=""UTF-8"">
@@ -587,6 +623,11 @@ namespace GameAPI.Controllers
             </body>
             </html>";
 
+        /// <summary>
+        /// Генерирует HTML-страницу с сообщением об ошибке подтверждения email.
+        /// </summary>
+        /// <param name="message">Текст сообщения об ошибке для отображения</param>
+        /// <returns>HTML-строка страницы ошибки</returns>
         private string GetErrorHtml(string message) => $@"
             <!DOCTYPE html>
             <meta charset=""UTF-8"">

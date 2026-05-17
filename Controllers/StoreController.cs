@@ -13,11 +13,22 @@ namespace GameAPI.Controllers
     {
         private readonly DBConnection _context;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера магазина.
+        /// </summary>
+        /// <param name="context">Контекст базы данных</param>
         public StoreController(DBConnection context)
         {
             _context = context;
         }
 
+        /// <summary>
+        /// Выполняет покупку предмета в магазине (бонус или улучшение).
+        /// Проверяет баланс, списывает средства и добавляет предмет пользователю.
+        /// </summary>
+        /// <param name="authToken">Токен аутентификации пользователя</param>
+        /// <param name="request">Данные о покупке (тип предмета, ID, уровень для улучшений)</param>
+        /// <returns>Обновленные данные кошелька, бонусов и улучшений пользователя</returns>
         [HttpPost("buy")]
         public async Task<IActionResult> Buy([FromQuery] string authToken, [FromBody] PurchaseRequest request)
         {
@@ -90,6 +101,12 @@ namespace GameAPI.Controllers
             return Ok(response);
         }
 
+        /// <summary>
+        /// Получает пользователя по токену аутентификации.
+        /// Поддерживает формат токена с префиксом "Bearer " или без него.
+        /// </summary>
+        /// <param name="authToken">Токен аутентификации (с префиксом "Bearer " или чистый)</param>
+        /// <returns>Объект пользователя или null, если токен недействителен</returns>
         private async Task<User> GetUserByToken(string authToken)
         {
             if (string.IsNullOrWhiteSpace(authToken)) return null;

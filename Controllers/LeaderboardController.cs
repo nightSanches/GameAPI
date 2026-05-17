@@ -12,6 +12,10 @@ namespace GameAPI.Controllers
     {
         private readonly DBConnection _context;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера таблицы лидеров.
+        /// </summary>
+        /// <param name="context">Контекст базы данных</param>
         public LeaderboardController(DBConnection context)
         {
             _context = context;

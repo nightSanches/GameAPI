@@ -13,11 +13,21 @@ namespace GameAPI.Controllers
     {
         private readonly DBConnection _context;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера подарков.
+        /// </summary>
+        /// <param name="context">Контекст базы данных</param>
         public GiftController(DBConnection context)
         {
             _context = context;
         }
 
+        /// <summary>
+        /// Позволяет пользователю получить ежедневный подарок (бонусные монеты).
+        /// Подарок доступен раз в 8 часов только для пользователей с подтвержденным email.
+        /// </summary>
+        /// <param name="authToken">Токен аутентификации пользователя</param>
+        /// <returns>Обновленный профиль пользователя с новым балансом и временем до следующего подарка</returns>
         [HttpPost("claim")]
         public async Task<IActionResult> Claim([FromQuery] string authToken)
         {
@@ -72,6 +82,12 @@ namespace GameAPI.Controllers
             return Ok(new { status = 0, data = profile });
         }
 
+        /// <summary>
+        /// Получает пользователя по токену аутентификации.
+        /// Поддерживает формат токена с префиксом "Bearer " или без него.
+        /// </summary>
+        /// <param name="authToken">Токен аутентификации (с префиксом "Bearer " или чистый)</param>
+        /// <returns>Объект пользователя или null, если токен недействителен</returns>
         private async Task<User> GetUserByToken(string authToken)
         {
             if (string.IsNullOrWhiteSpace(authToken)) return null;
