@@ -62,7 +62,7 @@ namespace GameAPI.Classes
                 entity.ToTable("Bonuses");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.PriceGold).HasDefaultValue(0);
+                entity.Property(e => e.PriceMoney).HasDefaultValue(0);
             });
 
             // --- Upgrades ---
@@ -80,7 +80,7 @@ namespace GameAPI.Classes
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.UpgradeId).IsRequired();
                 entity.Property(e => e.Level).HasDefaultValue(1);
-                entity.Property(e => e.PriceGold).HasDefaultValue(0);
+                entity.Property(e => e.PriceMoney).HasDefaultValue(0);
 
                 entity.HasOne<Upgrade>()
                       .WithMany()
@@ -121,12 +121,17 @@ namespace GameAPI.Classes
             {
                 entity.ToTable("Users_scores");
                 entity.HasKey(e => e.Id);
-                entity.HasIndex(e => e.UserId).IsUnique();
-                entity.HasOne(e => e.User)
-                      .WithOne(u => u.Score)
-                      .HasForeignKey<UserScore>(e => e.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
                 entity.Property(e => e.BestScore).IsRequired();
+
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.District)
+                      .WithMany()
+                      .HasForeignKey(e => e.DistrictId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // --- Users_upgrades ---
@@ -145,17 +150,19 @@ namespace GameAPI.Classes
                 entity.Property(e => e.Level).HasDefaultValue(0);
             });
 
+
             // --- Users_wallet ---
             modelBuilder.Entity<UserWallet>(entity =>
             {
                 entity.ToTable("Users_wallet");
                 entity.HasKey(e => e.Id);
-                entity.HasIndex(e => e.UserId).IsUnique(); // Делаем уникальным, как в БД
+                entity.HasIndex(e => e.UserId).IsUnique();
                 entity.HasOne(e => e.User)
                       .WithOne(u => u.Wallet)
                       .HasForeignKey<UserWallet>(e => e.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
-                entity.Property(e => e.Gold).HasDefaultValue(0);
+                entity.Property(e => e.Money).HasDefaultValue(0);
+                entity.Property(e => e.Reputation).HasDefaultValue(0);
             });
 
             // --- Users_stats ---
@@ -172,6 +179,8 @@ namespace GameAPI.Classes
                 entity.Property(e => e.BlocksPlacedCount).HasDefaultValue(0);
                 entity.Property(e => e.IBlocksPlacedCount).HasDefaultValue(0);
             });
+
+            //////////////
 
             // --- Districts ---
             modelBuilder.Entity<District>(entity =>
@@ -218,38 +227,6 @@ namespace GameAPI.Classes
                       .WithMany()
                       .HasForeignKey(e => e.AchievementId)
                       .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // --- Users_scores (composite key for district scores) ---
-            modelBuilder.Entity<UserScore>(entity =>
-            {
-                entity.ToTable("Users_scores");
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.BestScore).IsRequired();
-
-                entity.HasOne(e => e.User)
-                      .WithMany()
-                      .HasForeignKey(e => e.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(e => e.District)
-                      .WithMany()
-                      .HasForeignKey(e => e.DistrictId)
-                      .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // --- Users_wallet ---
-            modelBuilder.Entity<UserWallet>(entity =>
-            {
-                entity.ToTable("Users_wallet");
-                entity.HasKey(e => e.Id);
-                entity.HasIndex(e => e.UserId).IsUnique();
-                entity.HasOne(e => e.User)
-                      .WithOne(u => u.Wallet)
-                      .HasForeignKey<UserWallet>(e => e.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                entity.Property(e => e.Gold).HasDefaultValue(0);
-                entity.Property(e => e.Reputation).HasDefaultValue(0);
             });
         }
     }

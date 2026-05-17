@@ -9,7 +9,7 @@ namespace GameAPI.Models
         [Column("Upgrade_id")]
         public int UpgradeId { get; set; }
         public int Level { get; set; }
-        [Column("Price_gold")]
-        public int PriceGold { get; set; }
+        [Column("Price_money")]
+        public int PriceMoney { get; set; }
     }
 }

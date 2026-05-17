@@ -27,7 +27,7 @@ namespace GameAPI.Controllers
             // Обновляем кошелёк
             var wallet = await _context.UserWallets.FirstOrDefaultAsync(w => w.UserId == user.Id);
             if (wallet == null) return BadRequest("Кошелёк не найден");
-            wallet.Gold += request.GoldEarned;
+            wallet.Money += request.MoneyEarned;
 
             // Обновляем рекорд
             var score = await _context.UserScores.FirstOrDefaultAsync(s => s.UserId == user.Id);
@@ -63,7 +63,7 @@ namespace GameAPI.Controllers
             // Возвращаем обновлённые данные
             var response = new GameEndResponse
             {
-                Gold = wallet.Gold,
+                Money = wallet.Money,
                 BestScore = score.BestScore,
                 Rank = rank,
                 GamesPlayed = stats.GamesPlayedCount,

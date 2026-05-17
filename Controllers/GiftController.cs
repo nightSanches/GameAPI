@@ -40,10 +40,10 @@ namespace GameAPI.Controllers
 
             // Начисляем монеты
             var random = new Random();
-            int goldReward = random.Next(50, 150);
+            int moneyReward = random.Next(50, 150);
 
             var wallet = await _context.UserWallets.FirstOrDefaultAsync(w => w.UserId == user.Id);
-            wallet.Gold += goldReward;
+            wallet.Money += moneyReward;
             gift.LastBonusDt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
@@ -64,7 +64,7 @@ namespace GameAPI.Controllers
                 Email = user.Email,
                 EmailConfirmed = user.EmailConfirmed,
                 RegistrationDate = user.RegistrationDate,
-                Gold = wallet.Gold,
+                Money = wallet.Money,
                 SecondsUntilNextGift = secondsUntilNextGift,
                 GiftAvailable = false
             };

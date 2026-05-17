@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameAPI.Models
@@ -5,6 +6,7 @@ namespace GameAPI.Models
     [Table("Users_achievements")]
     public class UserAchievement
     {
+        [Key]
         public int Id { get; set; }
         [Column("User_Id")]
         public int UserId { get; set; }

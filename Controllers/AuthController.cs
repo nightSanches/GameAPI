@@ -283,7 +283,7 @@ namespace GameAPI.Controllers
         private async Task CreateDefaultUserData(int userId)
         {
             // Кошелёк
-            _context.UserWallets.Add(new UserWallet { UserId = userId, Gold = 0, Reputation = 0 });
+            _context.UserWallets.Add(new UserWallet { UserId = userId, Money = 0, Reputation = 0 });
 
             // Счёт для каждого района
             var allDistricts = await _context.Districts.ToListAsync();
@@ -438,13 +438,13 @@ namespace GameAPI.Controllers
                     Id = b.Id,
                     Name = b.Name,
                     Description = b.Description,
-                    PriceGold = b.PriceGold
+                    PriceMoney = b.PriceMoney
                 }).ToListAsync(),
                 UpgradeLevels = await _context.UpgradesCosts.Select(ul => new UpgradeLevelConfigDto
                 {
                     UpgradeId = ul.UpgradeId,
                     Level = ul.Level,
-                    PriceGold = ul.PriceGold
+                    PriceMoney = ul.PriceMoney
                 }).ToListAsync(),
                 Upgrades = await _context.Upgrades.Select(u => new UpgradeConfigDto
                 {
@@ -463,7 +463,7 @@ namespace GameAPI.Controllers
                 Email = user.Email,
                 EmailConfirmed = user.EmailConfirmed,
                 RegistrationDate = user.RegistrationDate,
-                Gold = user.Wallet?.Gold ?? 0,
+                Money = user.Wallet?.Money ?? 0,
                 Reputation = user.Wallet?.Reputation ?? 0,
                 BestScore = bestScoreOverall,
                 Rank = rank,

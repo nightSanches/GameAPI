@@ -12,7 +12,7 @@
         public DateTime? RegistrationDate { get; set; }
 
         // Ресурсы
-        public int Gold { get; set; }
+        public int Money { get; set; }
         public int Reputation { get; set; }
 
         // Рекорд и место
@@ -79,7 +79,7 @@
             public int Id { get; set; }
             public string Name { get; set; }
             public string Description { get; set; }
-            public int PriceGold { get; set; }
+            public int PriceMoney { get; set; }
         }
         public class UpgradeConfigDto
         {
@@ -92,7 +92,7 @@
         {
             public int UpgradeId { get; set; }
             public int Level { get; set; }
-            public int PriceGold { get; set; }
+            public int PriceMoney { get; set; }
         }
     }
 }
