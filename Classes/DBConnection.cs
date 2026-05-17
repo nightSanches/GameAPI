@@ -121,9 +121,10 @@ namespace GameAPI.Classes
             {
                 entity.ToTable("Users_scores");
                 entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.UserId, e.DistrictId }).IsUnique();
                 entity.HasOne(e => e.User)
-                      .WithOne(u => u.Score)
-                      .HasForeignKey<UserScore>(e => e.UserId)
+                      .WithMany(u => u.Scores)
+                      .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne(e => e.District)
                       .WithMany()

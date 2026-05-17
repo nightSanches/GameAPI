@@ -333,10 +333,10 @@ namespace GameAPI.Controllers
             foreach (var district in allDistricts)
             {
                 _context.UserScores.Add(new UserScore
-                { 
-                    UserId = userId, 
-                    DistrictId = district.Id, 
-                    BestScore = 0 
+                {
+                    UserId = userId,
+                    DistrictId = district.Id,
+                    BestScore = 0
                 });
             }
 
