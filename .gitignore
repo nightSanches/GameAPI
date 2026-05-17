@@ -2,12 +2,11 @@
 # Compiled and build artifacts
 *.exe
 *.dll
-*.so
-*.a
-*.obj
-*.out
-obj/
+*.pdb
+*.nupkg
+*.snupkg
 bin/
+obj/
 # Dependencies
 packages/
 # Logs and temp files
@@ -17,8 +16,9 @@ packages/
 # Environment
 .env
 .env.local
-.env.
+.env.*
 # Editors
+.vs/
 .vscode/
 .idea/
 ```

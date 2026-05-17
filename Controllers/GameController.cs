@@ -12,11 +12,22 @@ namespace GameAPI.Controllers
     {
         private readonly DBConnection _context;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр контроллера игры.
+        /// </summary>
+        /// <param name="context">Контекст базы данных</param>
         public GameController(DBConnection context)
         {
             _context = context;
         }
 
+        /// <summary>
+        /// Обрабатывает завершение игровой сессии: обновляет кошелек, рекорды, статистику и достижения игрока.
+        /// Возвращает обновленные данные игрока включая ранги по всем районам.
+        /// </summary>
+        /// <param name="authToken">Токен аутентификации пользователя</param>
+        /// <param name="request">Данные о завершении игры (счет, заработанные ресурсы, прогресс достижений)</param>
+        /// <returns>Обновленные данные игрока после завершения игры</returns>
         [HttpPost("end")]
         public async Task<IActionResult> EndGame([FromQuery] string authToken, [FromBody] GameEndRequest request)
         {
@@ -192,6 +203,12 @@ namespace GameAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Получает пользователя по токену аутентификации.
+        /// Поддерживает формат токена с префиксом "Bearer " или без него.
+        /// </summary>
+        /// <param name="authToken">Токен аутентификации (с префиксом "Bearer " или чистый)</param>
+        /// <returns>Объект пользователя или null, если токен недействителен</returns>
         private async Task<User> GetUserByToken(string authToken)
         {
             if (string.IsNullOrWhiteSpace(authToken))
