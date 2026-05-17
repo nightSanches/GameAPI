@@ -3,8 +3,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameAPI.Classes
 {
+    /// <summary>
+    /// Контекст базы данных для приложения Apex Town.
+    /// Наследуется от DbContext Entity Framework Core и предоставляет доступ ко всем таблицам БД.
+    /// Автоматически создаёт базу данных при запуске, если она не существует.
+    /// </summary>
     public class DBConnection : DbContext
     {
+        // DbSet представляет таблицы базы данных
         public DbSet<User> Users { get; set; }
         public DbSet<Bonus> Bonuses { get; set; }
         public DbSet<Upgrade> Upgrades { get; set; }
@@ -19,15 +25,19 @@ namespace GameAPI.Classes
         public DbSet<Achievement> Achievements { get; set; }
         public DbSet<UserAchievement> UserAchievements { get; set; }
 
+        /// <summary>
+        /// Конструктор по умолчанию. Вызывает EnsureCreated() для автоматического создания БД.
+        /// </summary>
         public DBConnection()
         {
             Database.EnsureCreated();
         }
 
         /// <summary>
-        /// Конфигурация подключения к базе данных MySQL
+        /// Конфигурация подключения к базе данных MySQL.
+        /// Использует локальный сервер MySQL на порту 3316 с базой данных "GameDatabase".
         /// </summary>
-        /// <param name="optionsBuilder">Билдер опций контекста БД</param>
+        /// <param name="optionsBuilder">Билдер опций для настройки контекста БД</param>
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseMySql(
@@ -36,14 +46,16 @@ namespace GameAPI.Classes
         }
 
         /// <summary>
-        /// Конфигурация моделей базы данных
+        /// Конфигурация моделей базы данных через Fluent API.
+        /// Определяет имена таблиц, первичные ключи, индексы, ограничения и связи между сущностями.
         /// </summary>
-        /// <param name="modelBuilder">Билдер моделей</param>
+        /// <param name="modelBuilder">Билдер моделей для настройки структуры БД</param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             // --- Users ---
+            // Таблица пользователей: никнейм (уникальный), пароль, роль, токен сессии, email
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("Users");

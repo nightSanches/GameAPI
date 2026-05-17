@@ -6,15 +6,32 @@ using MimeKit;
 
 namespace GameAPI.Classes
 {
+    /// <summary>
+    /// Сервис для отправки email-уведомлений через SMTP.
+    /// Реализует интерфейс IEmailService и использует настройки из конфигурации приложения.
+    /// Отправляет письма подтверждения регистрации и уведомления об успешном подтверждении.
+    /// </summary>
     public class EmailService : IEmailService
     {
+        // Настройки SMTP сервера для отправки писем
         private readonly EmailSettings _emailSettings;
 
+        /// <summary>
+        /// Конструктор сервиса email. Получает настройки через dependency injection.
+        /// </summary>
+        /// <param name="emailSettings">Настройки SMTP, полученные из appsettings.json</param>
         public EmailService(IOptions<EmailSettings> emailSettings)
         {
             _emailSettings = emailSettings.Value;
         }
 
+        /// <summary>
+        /// Отправляет HTML-письмо с кнопкой подтверждения email адреса.
+        /// Использует SMTP клиент для подключения к почтовому серверу и отправки сообщения.
+        /// </summary>
+        /// <param name="email">Адрес электронной почты получателя</param>
+        /// <param name="confirmationLink">Ссылка для подтверждения (содержит уникальный токен)</param>
+        /// <returns>Задача асинхронной операции отправки</returns>
         public async Task SendConfirmationEmailAsync(string email, string confirmationLink)
         {
             var message = new MimeMessage();
@@ -62,6 +79,13 @@ namespace GameAPI.Classes
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
         }
+        
+        /// <summary>
+        /// Отправляет HTML-уведомление об успешном подтверждении email адреса.
+        /// Используется после того, как пользователь перешёл по ссылке подтверждения.
+        /// </summary>
+        /// <param name="email">Адрес электронной почты получателя</param>
+        /// <returns>Задача асинхронной операции отправки</returns>
         public async Task SendEmailConfirmedNotificationAsync(string email)
         {
             var message = new MimeMessage();
@@ -103,11 +127,30 @@ namespace GameAPI.Classes
         }
     }
 
+    /// <summary>
+    /// Класс настроек для SMTP сервера отправки email.
+    /// Заполняется из секции "EmailSettings" в appsettings.json.
+    /// </summary>
     public class EmailSettings
     {
+        /// <summary>
+        /// Адрес SMTP сервера (например, smtp.gmail.com)
+        /// </summary>
         public string SmtpServer { get; set; }
+        
+        /// <summary>
+        /// Порт SMTP сервера (обычно 587 для TLS)
+        /// </summary>
         public int SmtpPort { get; set; }
+        
+        /// <summary>
+        /// Email адрес отправителя
+        /// </summary>
         public string SenderEmail { get; set; }
+        
+        /// <summary>
+        /// Пароль или app-specific password для отправителя
+        /// </summary>
         public string SenderPassword { get; set; }
     }
 }
