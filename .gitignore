@@ -1,84 +1,47 @@
-```csharp
-# Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Dd]epends/
-[Mm]onoAndroid/
-[Mm]onoTouch/
-[iI]OS/
-[Ll]og/
-[Ll]ogs/
-
-# User-specific files
-*.user
-*.userosscache
-*.suo
-*.userprefs
-*.lock
-*.csproj.user
-*.vbproj.user
-*.fsproj.user
-*.userosscache
-*.sln.docstates
-
-# Build results
-[Bb]in/
-[Oo]bj/
-[Oo]ut/
-[Ll]ocal[Cc]ache/
-[Tt]emp/
-
-# Environment specific settings
-.env
-.env.local
-*.env.*
-
-# IDE
-.vs/
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
-
-# Testing
-[TestRr]esults/
-*.trx
+```
+# Build artifacts
+*.dll
+*.exe
+*.pdb
+*.obj
+*.o
+*.so
+*.a
+bin/
+obj/
+out/
 
 # Dependencies
 packages/
 node_modules/
-jspm_packages/
-bower_components/
-vendor/
+venv/
+.venv/
+__pycache__/
+*.egg-info/
 
-# Security
-appsettings.Production.json
-web.config.bak
+# Logs
+*.log
 
-# Compression
-*.zip
-*.7z
-*.rar
-*.gz
-*.tar
-*.bz2
-*.xz
-*.tgz
-*.tar.gz
-*.tar.bz2
-*.tar.xz
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+htmlcov/
+.coverage
+*.cover
+.nyc_output/
 ```

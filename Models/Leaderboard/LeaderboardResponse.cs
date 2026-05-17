@@ -2,6 +2,7 @@
 {
     public class LeaderboardResponse
     {
+        public int DistrictId { get; set; }
         public List<LeaderboardEntry> TopPlayers { get; set; }
         public LeaderboardEntry CurrentPlayerEntry { get; set; } // null если игрок не авторизован
     }
