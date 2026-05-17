@@ -58,14 +58,14 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             }));
 
-    // Лимит 10 запроса на подтверждение почты в 15 мин. на IP
+    // Лимит 10 запроса на подтверждение почты в 10 мин. на IP
     options.AddPolicy("ResendConfirmation", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = 10,
-                Window = TimeSpan.FromMinutes(15),
+                Window = TimeSpan.FromMinutes(10),
                 QueueLimit = 0
             }));
 

@@ -203,13 +203,13 @@ namespace GameAPI.Controllers
         {
             var user = await GetUserByToken(authToken);
             if (user == null)
-                return Unauthorized(new { message = "Недействительный токен." });
+                return Unauthorized(new { status = -1, message = "Недействительный токен." });
 
             if (user.EmailConfirmed)
-                return BadRequest(new { message = "Email уже подтверждён." });
+                return BadRequest(new { status = 2, message = "Email уже подтверждён." });
 
             if (string.IsNullOrWhiteSpace(user.Email))
-                return BadRequest(new { message = "У вас не указан email." });
+                return BadRequest(new { status = -2, message = "У вас не указан email." });
 
             if (user.EmailConfirmationTokenExpires.HasValue)
             {
@@ -220,6 +220,7 @@ namespace GameAPI.Controllers
                     int retryAfter = 60 - (int)secondsSinceLastSend;
                     return BadRequest(new
                     {
+                        status = 1,
                         message = $"Повторная отправка возможна через {retryAfter} сек.",
                         retryAfterSeconds = retryAfter
                     });
@@ -234,45 +235,45 @@ namespace GameAPI.Controllers
             var confirmationLink = $"{publicBaseUrl.TrimEnd('/')}/api/auth/confirm-email?token={user.EmailConfirmationToken}";
             await _emailService.SendConfirmationEmailAsync(user.Email, confirmationLink);
 
-            return Ok(new { message = "Письмо отправлено повторно. Проверьте почту." });
+            return Ok(new { status = 0, message = "Письмо отправлено повторно. Проверьте почту." });
         }
 
         /// <summary>
         /// Добавление или смена email для текущего пользователя
         /// </summary>
-        [HttpPost("add-email")]
-        public async Task<IActionResult> AddEmail([FromQuery] string authToken, [FromBody] AddEmailRequest request)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(new ValidationProblemDetails(ModelState));
+        //[HttpPost("add-email")]
+        //public async Task<IActionResult> AddEmail([FromQuery] string authToken, [FromBody] AddEmailRequest request)
+        //{
+        //    if (!ModelState.IsValid)
+        //        return BadRequest(new ValidationProblemDetails(ModelState));
 
-            var user = await GetUserByToken(authToken);
-            if (user == null)
-                return Unauthorized(new { message = "Недействительный токен." });
+        //    var user = await GetUserByToken(authToken);
+        //    if (user == null)
+        //        return Unauthorized(new { message = "Недействительный токен." });
 
-            // Проверяем, не подтверждён ли email другим пользователем
-            var confirmedUserWithEmail = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == request.Email && u.EmailConfirmed);
-            if (confirmedUserWithEmail != null)
-                return BadRequest(new { message = "Этот email уже подтверждён другим пользователем." });
+        //    // Проверяем, не подтверждён ли email другим пользователем
+        //    var confirmedUserWithEmail = await _context.Users
+        //        .FirstOrDefaultAsync(u => u.Email == request.Email && u.EmailConfirmed);
+        //    if (confirmedUserWithEmail != null)
+        //        return BadRequest(new { message = "Этот email уже подтверждён другим пользователем." });
 
-            // Если email уже подтверждён у текущего пользователя, запрещаем менять
-            if (user.EmailConfirmed)
-                return BadRequest(new { message = "Ваш email уже подтверждён и не может быть изменён." });
+        //    // Если email уже подтверждён у текущего пользователя, запрещаем менять
+        //    if (user.EmailConfirmed)
+        //        return BadRequest(new { message = "Ваш email уже подтверждён и не может быть изменён." });
 
-            // Устанавливаем новый email
-            user.Email = request.Email;
-            user.EmailConfirmed = false;
-            user.EmailConfirmationToken = GenerateEmailConfirmationToken();
-            user.EmailConfirmationTokenExpires = DateTime.UtcNow.AddHours(24);
-            await _context.SaveChangesAsync();
+        //    // Устанавливаем новый email
+        //    user.Email = request.Email;
+        //    user.EmailConfirmed = false;
+        //    user.EmailConfirmationToken = GenerateEmailConfirmationToken();
+        //    user.EmailConfirmationTokenExpires = DateTime.UtcNow.AddHours(24);
+        //    await _context.SaveChangesAsync();
 
-            var publicBaseUrl = _configuration["AppSettings:PublicBaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
-            var confirmationLink = $"{publicBaseUrl.TrimEnd('/')}/api/auth/confirm-email?token={user.EmailConfirmationToken}";
-            await _emailService.SendConfirmationEmailAsync(user.Email, confirmationLink);
+        //    var publicBaseUrl = _configuration["AppSettings:PublicBaseUrl"] ?? $"{Request.Scheme}://{Request.Host}";
+        //    var confirmationLink = $"{publicBaseUrl.TrimEnd('/')}/api/auth/confirm-email?token={user.EmailConfirmationToken}";
+        //    await _emailService.SendConfirmationEmailAsync(user.Email, confirmationLink);
 
-            return Ok(new { message = "Письмо с подтверждением отправлено на указанный email." });
-        }
+        //    return Ok(new { message = "Письмо с подтверждением отправлено на указанный email." });
+        //}
 
         // ==================== Вспомогательные методы ====================
 
@@ -360,9 +361,9 @@ namespace GameAPI.Controllers
                 .ToListAsync();
 
 
-            // Доступность подарка: email подтверждён и прошло >=24 часа с последнего получения
+            // Доступность подарка: email подтверждён и прошло >=8 часа с последнего получения
             bool giftAvailable = user.EmailConfirmed && (user.Gift?.LastBonusDt == null ||
-                (DateTime.UtcNow - user.Gift.LastBonusDt.Value).TotalHours >= 24);
+                (DateTime.UtcNow - user.Gift.LastBonusDt.Value).TotalHours >= 8);
 
             int secondsUntilNextGift = -1;
             if (user.EmailConfirmed && user.Gift != null)
@@ -371,7 +372,7 @@ namespace GameAPI.Controllers
                     secondsUntilNextGift = 0; // можно забирать сразу
                 else
                 {
-                    var nextTime = user.Gift.LastBonusDt.Value.AddHours(24);
+                    var nextTime = user.Gift.LastBonusDt.Value.AddHours(8);
                     var delta = nextTime - DateTime.UtcNow;
                     secondsUntilNextGift = delta.TotalSeconds > 0 ? (int)delta.TotalSeconds : 0;
                 }

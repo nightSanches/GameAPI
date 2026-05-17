@@ -23,44 +23,38 @@ namespace GameAPI.Controllers
         {
             var user = await GetUserByToken(authToken);
             if (user == null)
-                return Unauthorized(new { message = "Недействительный токен." });
+                return Unauthorized(new { status = -1, message = "Недействительный токен." });
 
             if (!user.EmailConfirmed)
-                return BadRequest(new { message = "Необходимо подтвердить email" });
+                return Ok(new { status = 2, message = "Необходимо подтвердить email" });
 
             var gift = await _context.UserGifts.FirstOrDefaultAsync(g => g.UserId == user.Id);
-            if (gift == null) return BadRequest("Запись о подарках не найдена");
+            if (gift == null)
+                return BadRequest(new { status = -2, message = "Запись о подарках не найдена" });
 
             bool canClaim = gift.LastBonusDt == null ||
-                (DateTime.UtcNow - gift.LastBonusDt.Value).TotalHours >= 24;
+                (DateTime.UtcNow - gift.LastBonusDt.Value).TotalHours >= 8;
 
             if (!canClaim)
-                return BadRequest(new { message = "Подарок можно получать раз в 24 часа" });
+                return Ok(new { status = 1, message = "Подарок можно получать раз в 8 часов" });
 
-            // Начисляем случайные монеты (можно настроить)
+            // Начисляем монеты
             var random = new Random();
             int goldReward = random.Next(50, 150);
 
             var wallet = await _context.UserWallets.FirstOrDefaultAsync(w => w.UserId == user.Id);
             wallet.Gold += goldReward;
             gift.LastBonusDt = DateTime.UtcNow;
-
             await _context.SaveChangesAsync();
 
-            int secondsUntilNextGift = -1;
-            if (user.EmailConfirmed && user.Gift != null)
+            int secondsUntilNextGift = 0;
+            if (user.EmailConfirmed && gift.LastBonusDt != null)
             {
-                if (user.Gift.LastBonusDt == null)
-                    secondsUntilNextGift = 0; // можно забирать сразу
-                else
-                {
-                    var nextTime = user.Gift.LastBonusDt.Value.AddHours(24);
-                    var delta = nextTime - DateTime.UtcNow;
-                    secondsUntilNextGift = delta.TotalSeconds > 0 ? (int)delta.TotalSeconds : 0;
-                }
+                var nextTime = gift.LastBonusDt.Value.AddHours(8);
+                var delta = nextTime - DateTime.UtcNow;
+                secondsUntilNextGift = delta.TotalSeconds > 0 ? (int)delta.TotalSeconds : 0;
             }
 
-            // Возвращаем обновлённый профиль (основные поля)
             var profile = new GiftResponse
             {
                 Id = user.Id,
@@ -73,10 +67,9 @@ namespace GameAPI.Controllers
                 Gold = wallet.Gold,
                 SecondsUntilNextGift = secondsUntilNextGift,
                 GiftAvailable = false
-                // Остальные поля не заполняем т.к. не нужны в данном ответе (или можно заполнить, если понадобится)
             };
 
-            return Ok(profile);
+            return Ok(new { status = 0, data = profile });
         }
 
         private async Task<User> GetUserByToken(string authToken)
