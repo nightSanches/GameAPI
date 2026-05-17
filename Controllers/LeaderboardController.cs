@@ -18,14 +18,14 @@ namespace GameAPI.Controllers
         }
 
         /// <summary>
-        /// Получить таблицу лидеров (топ-50 + текущий игрок)
+        /// Получить таблицу лидеров для конкретного района (топ-50 + текущий игрок)
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetLeaderboard([FromQuery] string authToken = null)
+        public async Task<IActionResult> GetLeaderboard([FromQuery] string authToken = null, [FromQuery] int districtId = 1)
         {
-            // 1. Все пользователи с рекордами, сортировка: BestScore DESC, Nickname ASC
+            // 1. Все пользователи с рекордами для указанного района, сортировка: BestScore DESC, Nickname ASC
             var allUsersQuery = _context.Users
-                .Join(_context.UserScores,
+                .Join(_context.UserScores.Where(s => s.DistrictId == districtId),
                     u => u.Id,
                     s => s.UserId,
                     (u, s) => new { User = u, s.BestScore })
@@ -96,11 +96,13 @@ namespace GameAPI.Controllers
             LeaderboardEntry currentPlayerEntry = null;
             if (currentUser != null)
             {
-                var userScore = await _context.UserScores.FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+                var userScore = await _context.UserScores
+                    .FirstOrDefaultAsync(s => s.UserId == currentUser.Id && s.DistrictId == districtId);
                 if (userScore != null)
                 {
                     // Вычисляем позицию текущего игрока (dense rank по всем)
                     var allScores = await _context.UserScores
+                        .Where(s => s.DistrictId == districtId)
                         .OrderByDescending(s => s.BestScore)
                         .Select(s => s.BestScore)
                         .ToListAsync();
@@ -124,6 +126,7 @@ namespace GameAPI.Controllers
 
             var response = new LeaderboardResponse
             {
+                DistrictId = districtId,
                 TopPlayers = topPlayers,
                 CurrentPlayerEntry = currentPlayerEntry
             };

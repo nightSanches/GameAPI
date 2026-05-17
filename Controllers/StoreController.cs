@@ -34,9 +34,9 @@ namespace GameAPI.Controllers
                 case "bonus":
                     var bonus = await _context.Bonuses.FindAsync(request.ItemId);
                     if (bonus == null) return NotFound("Бонус не найден");
-                    if (wallet.Gold < bonus.PriceGold) return BadRequest("Недостаточно золота");
+                    if (wallet.Money < bonus.PriceMoney) return BadRequest("Недостаточно монет");
 
-                    wallet.Gold -= bonus.PriceGold;
+                    wallet.Money -= bonus.PriceMoney;
                     var userBonus = await _context.UserBonuses
                         .FirstOrDefaultAsync(b => b.UserId == user.Id && b.BonusId == request.ItemId);
                     if (userBonus == null)
@@ -54,7 +54,7 @@ namespace GameAPI.Controllers
                     var upgradeLevel = await _context.UpgradesCosts
                         .FirstOrDefaultAsync(l => l.UpgradeId == request.ItemId && l.Level == request.Level);
                     if (upgradeLevel == null) return NotFound("Уровень улучшения не найден");
-                    if (wallet.Gold < upgradeLevel.PriceGold)
+                    if (wallet.Money < upgradeLevel.PriceMoney)
                         return BadRequest("Недостаточно валюты");
 
                     var userUpgrade = await _context.UserUpgrades
@@ -63,7 +63,7 @@ namespace GameAPI.Controllers
                     if (request.Level != userUpgrade.Level + 1)
                         return BadRequest("Нельзя перескочить уровень");
 
-                    wallet.Gold -= upgradeLevel.PriceGold;
+                    wallet.Money -= upgradeLevel.PriceMoney;
                     userUpgrade.Level = request.Level;
                     break;
 
@@ -76,7 +76,7 @@ namespace GameAPI.Controllers
             // Формируем обновлённый профиль (только нужные поля)
             var response = new PurchaseResponse
             {
-                Gold = wallet.Gold,
+                Money = wallet.Money,
                 Bonuses = await _context.UserBonuses
                     .Where(b => b.UserId == user.Id)
                     .Select(b => new UserBonusDto { BonusId = b.BonusId, Quantity = b.Quantity })

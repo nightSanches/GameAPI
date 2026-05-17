@@ -1,4 +1,4 @@
-﻿using GameAPI.Classes;
+using GameAPI.Classes;
 using GameAPI.Models;
 using GameAPI.Models.Game;
 using Microsoft.AspNetCore.Mvc;
@@ -24,17 +24,19 @@ namespace GameAPI.Controllers
             if (user == null)
                 return Unauthorized(new { message = "Недействительный токен." });
 
-            // Обновляем кошелёк
+            // Обновляем кошелёк (Money и Reputation)
             var wallet = await _context.UserWallets.FirstOrDefaultAsync(w => w.UserId == user.Id);
             if (wallet == null) return BadRequest("Кошелёк не найден");
-            wallet.Gold += request.GoldEarned;
+            wallet.Money += request.MoneyEarned;
+            wallet.Reputation += request.ReputationEarned;
 
-            // Обновляем рекорд
-            var score = await _context.UserScores.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            // Обновляем рекорд для указанного района
+            var userScore = await _context.UserScores
+                .FirstOrDefaultAsync(s => s.UserId == user.Id && s.DistrictId == request.DistrictId);
             bool isNewRecord = false;
-            if (score != null && request.Score > score.BestScore)
+            if (userScore != null && request.Score > userScore.BestScore)
             {
-                score.BestScore = request.Score;
+                userScore.BestScore = request.Score;
                 isNewRecord = true;
             }
 
@@ -49,27 +51,118 @@ namespace GameAPI.Controllers
             stats.BlocksPlacedCount += request.BlocksPlaced;
             stats.IBlocksPlacedCount += request.PerfectBlocks;
 
+            // Обновляем прогресс достижений
+            var achievements = await _context.Achievements
+                .Where(a => a.DistrictId == request.DistrictId)
+                .ToListAsync();
+
+            var userAchievements = await _context.UserAchievements
+                .Where(ua => ua.UserId == user.Id)
+                .ToListAsync();
+
+            foreach (var achievement in achievements)
+            {
+                var userAchievement = userAchievements.FirstOrDefault(ua => ua.AchievementId == achievement.Id);
+                if (userAchievement == null || userAchievement.IsUnlocked)
+                    continue;
+
+                int newProgress = 0;
+                switch (achievement.ConditionType.ToLower())
+                {
+                    case "max_floor":
+                        newProgress = request.MaxFloor;
+                        break;
+                    case "perfect_streak":
+                        newProgress = request.PerfectStreak;
+                        break;
+                    case "games_played":
+                        newProgress = stats.GamesPlayedCount;
+                        break;
+                }
+
+                if (newProgress > userAchievement.CurrentProgress)
+                {
+                    userAchievement.CurrentProgress = newProgress;
+
+                    // Проверяем, достигнуто ли условие
+                    if (userAchievement.CurrentProgress >= achievement.ConditionValue)
+                    {
+                        userAchievement.IsUnlocked = true;
+                        // Начисляем награду за достижение
+                        wallet.Reputation += achievement.RewardRep;
+                    }
+                }
+            }
+
             await _context.SaveChangesAsync();
 
-            // Вычисляем новое место игрока
-            int rank = 1;
-            var scores = await _context.UserScores
-                .Select(s => s.BestScore)
-                .Distinct()
-                .OrderByDescending(s => s)
-                .ToListAsync();
-            rank = scores.FindIndex(s => s == score.BestScore) + 1;
+            // Получаем актуальные счета по районам и вычисляем ранги для каждого района
+            var allDistricts = await _context.Districts.ToListAsync();
+            var scoresByDistrict = new List<ScoreByDistrictDto>();
+            var districtRanks = new List<DistrictRankDto>();
+
+            foreach (var district in allDistricts)
+            {
+                var userScoreRecord = await _context.UserScores
+                    .FirstOrDefaultAsync(s => s.UserId == user.Id && s.DistrictId == district.Id);
+                var bestScoreForDistrict = userScoreRecord?.BestScore ?? 0;
+
+                scoresByDistrict.Add(new ScoreByDistrictDto
+                {
+                    DistrictId = district.Id,
+                    BestScore = bestScoreForDistrict
+                });
+
+                // Вычисляем dense rank для этого района
+                int rankForDistrict = 1;
+                if (bestScoreForDistrict > 0)
+                {
+                    var allScoresForDistrict = await _context.UserScores
+                        .Where(s => s.DistrictId == district.Id)
+                        .OrderByDescending(s => s.BestScore)
+                        .Select(s => s.BestScore)
+                        .Distinct()
+                        .ToListAsync();
+                    rankForDistrict = allScoresForDistrict.TakeWhile(s => s > bestScoreForDistrict).Count() + 1;
+                }
+                else
+                {
+                    var hasAnyScore = await _context.UserScores
+                        .Where(s => s.DistrictId == district.Id && s.BestScore > 0)
+                        .AnyAsync();
+                    rankForDistrict = hasAnyScore 
+                        ? await _context.UserScores.Where(s => s.DistrictId == district.Id).Select(s => s.BestScore).Distinct().CountAsync() + 1 
+                        : 1;
+                }
+
+                districtRanks.Add(new DistrictRankDto
+                {
+                    DistrictId = district.Id,
+                    BestScore = bestScoreForDistrict,
+                    Rank = rankForDistrict
+                });
+            }
 
             // Возвращаем обновлённые данные
             var response = new GameEndResponse
             {
-                Gold = wallet.Gold,
-                BestScore = score.BestScore,
-                Rank = rank,
+                Money = wallet.Money,
+                Reputation = wallet.Reputation,
                 GamesPlayed = stats.GamesPlayedCount,
                 BlocksPlaced = stats.BlocksPlacedCount,
                 PerfectBlocks = stats.IBlocksPlacedCount,
-                IsNewRecord = isNewRecord
+                IsNewRecord = isNewRecord,
+                ScoresByDistrict = scoresByDistrict,
+                DistrictRanks = districtRanks,
+                Achievements = await _context.UserAchievements
+                    .Where(ua => ua.UserId == user.Id)
+                    .Select(ua => new UserAchievementDto
+                    {
+                        AchievementId = ua.AchievementId,
+                        CurrentProgress = ua.CurrentProgress,
+                        IsUnlocked = ua.IsUnlocked
+                    })
+                    .ToListAsync()
             };
 
             return Ok(response);

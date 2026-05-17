@@ -23,7 +23,7 @@ namespace GameAPI.Models
 
         // Навигационные свойства
         public UserWallet Wallet { get; set; }
-        public UserScore Score { get; set; }
+        public ICollection<UserScore> Scores { get; set; }
         public UserGift Gift { get; set; }
         public ICollection<UserBonus> Bonuses { get; set; }
         public ICollection<UserUpgrade> Upgrades { get; set; }

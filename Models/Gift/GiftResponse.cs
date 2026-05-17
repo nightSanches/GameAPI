@@ -10,7 +10,7 @@
         public string? Email { get; set; }
         public bool EmailConfirmed { get; set; }
         public DateTime? RegistrationDate { get; set; }
-        public int Gold { get; set; }
+        public int Money { get; set; }
         public int SecondsUntilNextGift { get; set; }
         public bool GiftAvailable { get; set; }
     }
