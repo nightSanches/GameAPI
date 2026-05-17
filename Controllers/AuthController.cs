@@ -285,13 +285,6 @@ namespace GameAPI.Controllers
             // Кошелёк
             _context.UserWallets.Add(new UserWallet { UserId = userId, Money = 0, Reputation = 0 });
 
-            // Счёт для каждого района
-            var allDistricts = await _context.Districts.ToListAsync();
-            foreach (var district in allDistricts)
-            {
-                _context.UserScores.Add(new UserScore { UserId = userId, DistrictId = district.Id, BestScore = 0 });
-            }
-
             // Подарки
             _context.UserGifts.Add(new UserGift { UserId = userId, LastBonusDt = null });
 
@@ -332,6 +325,18 @@ namespace GameAPI.Controllers
                     AchievementId = achievement.Id,
                     CurrentProgress = 0,
                     IsUnlocked = false
+                });
+            }
+
+            // Счёт для каждого района
+            var allDistricts = await _context.Districts.ToListAsync();
+            foreach (var district in allDistricts)
+            {
+                _context.UserScores.Add(new UserScore
+                { 
+                    UserId = userId, 
+                    DistrictId = district.Id, 
+                    BestScore = 0 
                 });
             }
 
