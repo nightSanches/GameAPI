@@ -8,7 +8,7 @@ namespace GameAPI.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
-        [Column("Price_gold")]
-        public int PriceGold { get; set; }
+        [Column("Price_money")]
+        public int PriceMoney { get; set; }
     }
 }

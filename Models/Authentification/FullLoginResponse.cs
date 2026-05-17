@@ -12,7 +12,8 @@
         public DateTime? RegistrationDate { get; set; }
 
         // Ресурсы
-        public int Gold { get; set; }
+        public int Money { get; set; }
+        public int Reputation { get; set; }
 
         // Рекорд и место
         public int BestScore { get; set; }
@@ -26,6 +27,7 @@
         // Владения
         public List<UserBonusDto> Bonuses { get; set; }
         public List<UserUpgradeDto> Upgrades { get; set; }
+        public List<UserAchievementDto> Achievements { get; set; }
 
         // Подарок
         public int SecondsUntilNextGift { get; set; }
@@ -33,6 +35,15 @@
 
         // Конфигурация магазина
         public StoreConfigDto StoreConfig { get; set; }
+
+        // Районы
+        public List<DistrictConfigDto> Districts { get; set; }
+
+        // Достижения конфигурация
+        public List<AchievementConfigDto> AchievementsConfig { get; set; }
+
+        // Счета по районам
+        public List<ScoreByDistrictDto> ScoresByDistrict { get; set; }
 
         // Вспомогательные DTO для владения
         public class UserBonusDto
@@ -47,6 +58,19 @@
             public int Level { get; set; }
         }
 
+        public class UserAchievementDto
+        {
+            public int AchievementId { get; set; }
+            public int CurrentProgress { get; set; }
+            public bool IsUnlocked { get; set; }
+        }
+
+        public class ScoreByDistrictDto
+        {
+            public int DistrictId { get; set; }
+            public int BestScore { get; set; }
+        }
+
         public class StoreConfigDto
         {
             public List<BonusConfigDto> Bonuses { get; set; }
@@ -59,8 +83,9 @@
             public int Id { get; set; }
             public string Name { get; set; }
             public string Description { get; set; }
-            public int PriceGold { get; set; }
+            public int PriceMoney { get; set; }
         }
+
         public class UpgradeConfigDto
         {
             public int Id { get; set; }
@@ -72,7 +97,27 @@
         {
             public int UpgradeId { get; set; }
             public int Level { get; set; }
-            public int PriceGold { get; set; }
+            public int PriceMoney { get; set; }
+        }
+
+        public class DistrictConfigDto
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public int UnlockRepReq { get; set; }
+            public decimal DifficultyMultiplier { get; set; }
+            public int SortOrder { get; set; }
+        }
+
+        public class AchievementConfigDto
+        {
+            public int Id { get; set; }
+            public int DistrictId { get; set; }
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string ConditionType { get; set; }
+            public int ConditionValue { get; set; }
+            public int RewardRep { get; set; }
         }
     }
 }

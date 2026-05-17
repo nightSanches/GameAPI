@@ -8,7 +8,8 @@ namespace GameAPI.Models
         public int Id { get; set; }
         [Column("User_id")]
         public int UserId { get; set; }
-        public int Gold { get; set; }
+        public int Money { get; set; }
+        public int Reputation { get; set; }
         public User User { get; set; }
     }
 }
