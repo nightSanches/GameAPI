@@ -1,4 +1,6 @@
-﻿namespace GameAPI.Models.Game
+﻿using static GameAPI.Models.Authentification.FullLoginResponse;
+
+namespace GameAPI.Models.Game
 {
     public class GameEndResponse
     {
@@ -11,25 +13,15 @@
         public List<ScoreByDistrictDto> ScoresByDistrict { get; set; }
         public List<DistrictRankDto> DistrictRanks { get; set; }
         public List<UserAchievementDto> Achievements { get; set; }
+        public List<UserBonusDto> Bonuses { get; set; }
     }
 
-    public class ScoreByDistrictDto
+    /// <summary>
+    /// DTO для бонуса пользователя. Используется в GameEndResponse.
+    /// </summary>
+    public class UserBonusDto
     {
-        public int DistrictId { get; set; }
-        public int BestScore { get; set; }
-    }
-
-    public class DistrictRankDto
-    {
-        public int DistrictId { get; set; }
-        public int BestScore { get; set; }
-        public int Rank { get; set; }
-    }
-
-    public class UserAchievementDto
-    {
-        public int AchievementId { get; set; }
-        public int CurrentProgress { get; set; }
-        public bool IsUnlocked { get; set; }
+        public int BonusId { get; set; }
+        public int Quantity { get; set; }
     }
 }

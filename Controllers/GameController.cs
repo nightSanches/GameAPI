@@ -3,6 +3,11 @@ using GameAPI.Models;
 using GameAPI.Models.Game;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static GameAPI.Models.Authentification.FullLoginResponse;
+
+using ScoreByDistrictDto = GameAPI.Models.Authentification.FullLoginResponse.ScoreByDistrictDto;
+using DistrictRankDto = GameAPI.Models.Authentification.FullLoginResponse.DistrictRankDto;
+using UserAchievementDto = GameAPI.Models.Authentification.FullLoginResponse.UserAchievementDto;
 
 namespace GameAPI.Controllers
 {
@@ -39,7 +44,6 @@ namespace GameAPI.Controllers
             var wallet = await _context.UserWallets.FirstOrDefaultAsync(w => w.UserId == user.Id);
             if (wallet == null) return BadRequest("Кошелёк не найден");
             wallet.Money += request.MoneyEarned;
-            wallet.Reputation += request.ReputationEarned;
 
             // Обновляем рекорд для указанного района
             var userScore = await _context.UserScores
@@ -64,6 +68,25 @@ namespace GameAPI.Controllers
 
             // Обновляем прогресс достижений через отдельный метод
             await UpdateAchievementsAsync(user.Id, request.DistrictId, request.AchievementProgresses, stats, wallet);
+
+            // Обрабатываем использованные бонусы
+            if (request.UsedBonuses != null && request.UsedBonuses.Count > 0)
+            {
+                foreach (var kvp in request.UsedBonuses)
+                {
+                    int bonusId = kvp.Key;
+                    int usedQuantity = kvp.Value;
+                    if (usedQuantity <= 0) continue;
+
+                    var userBonus = await _context.UserBonuses
+                        .FirstOrDefaultAsync(ub => ub.UserId == user.Id && ub.BonusId == bonusId);
+
+                    if (userBonus != null)
+                    {
+                        userBonus.Quantity = Math.Max(0, userBonus.Quantity - usedQuantity);
+                    }
+                }
+            }
 
             await _context.SaveChangesAsync();
 
@@ -132,6 +155,14 @@ namespace GameAPI.Controllers
                         AchievementId = ua.AchievementId,
                         CurrentProgress = ua.CurrentProgress,
                         IsUnlocked = ua.IsUnlocked
+                    })
+                    .ToListAsync(),
+                Bonuses = await _context.UserBonuses
+                    .Where(ub => ub.UserId == user.Id)
+                    .Select(ub => new Models.Game.UserBonusDto
+                    {
+                        BonusId = ub.BonusId,
+                        Quantity = ub.Quantity
                     })
                     .ToListAsync()
             };

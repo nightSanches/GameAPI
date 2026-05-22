@@ -4,7 +4,6 @@
     {
         public int Score { get; set; }
         public int MoneyEarned { get; set; }
-        public int ReputationEarned { get; set; }
         public int DistrictId { get; set; }
         public int BlocksPlaced { get; set; }
         public int PerfectBlocks { get; set; }
@@ -15,5 +14,10 @@
         /// Значение - текущее значение прогресса.
         /// </summary>
         public Dictionary<string, int> AchievementProgresses { get; set; } = new();
+
+        /// <summary>
+        /// Использованные бонусы за игровую сессию (bonusId -> количество использований).
+        /// </summary>
+        public Dictionary<int, int> UsedBonuses { get; set; } = new();
     }
 }
