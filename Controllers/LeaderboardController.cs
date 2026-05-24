@@ -25,7 +25,7 @@ namespace GameAPI.Controllers
         /// Получить таблицу лидеров для конкретного района (топ-50 + текущий игрок)
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetLeaderboard([FromQuery] string authToken = null, [FromQuery] int districtId = 1)
+        public async Task<IActionResult> GetLeaderboard([FromQuery] int districtId = 1)
         {
             // 1. Все пользователи с рекордами для указанного района, сортировка: BestScore DESC, Nickname ASC
             var allUsersQuery = _context.Users
@@ -36,8 +36,9 @@ namespace GameAPI.Controllers
                 .OrderByDescending(x => x.BestScore)
                 .ThenBy(x => x.User.Nickname);
 
-            // 2. Определяем текущего пользователя, если передан токен
+            // 2. Определяем текущего пользователя, если передан токен в заголовке Authorization
             User currentUser = null;
+            var authToken = ExtractAuthToken();
             if (!string.IsNullOrWhiteSpace(authToken))
             {
                 currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Token == authToken);
@@ -136,6 +137,19 @@ namespace GameAPI.Controllers
             };
 
             return Ok(response);
+        }
+
+        /// <summary>
+        /// Извлекает токен из заголовка Authorization.
+        /// </summary>
+        private string ExtractAuthToken()
+        {
+            var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(authHeader))
+                return null;
+            return authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                ? authHeader.Substring(7).Trim()
+                : authHeader.Trim();
         }
     }
 }

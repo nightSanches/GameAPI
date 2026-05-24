@@ -26,11 +26,11 @@ namespace GameAPI.Controllers
         /// Позволяет пользователю получить ежедневный подарок (бонусные монеты).
         /// Подарок доступен раз в 8 часов только для пользователей с подтвержденным email.
         /// </summary>
-        /// <param name="authToken">Токен аутентификации пользователя</param>
         /// <returns>Обновленный профиль пользователя с новым балансом и временем до следующего подарка</returns>
         [HttpPost("claim")]
-        public async Task<IActionResult> Claim([FromQuery] string authToken)
+        public async Task<IActionResult> Claim()
         {
+            var authToken = ExtractAuthToken();
             var user = await GetUserByToken(authToken);
             if (user == null)
                 return Unauthorized(new { status = -1, message = "Недействительный токен." });
@@ -83,17 +83,27 @@ namespace GameAPI.Controllers
         }
 
         /// <summary>
-        /// Получает пользователя по токену аутентификации.
-        /// Поддерживает формат токена с префиксом "Bearer " или без него.
+        /// Извлекает токен из заголовка Authorization.
         /// </summary>
-        /// <param name="authToken">Токен аутентификации (с префиксом "Bearer " или чистый)</param>
+        private string ExtractAuthToken()
+        {
+            var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(authHeader))
+                return null;
+            return authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                ? authHeader.Substring(7).Trim()
+                : authHeader.Trim();
+        }
+
+        /// <summary>
+        /// Получает пользователя по токену аутентификации.
+        /// </summary>
+        /// <param name="authToken">Токен аутентификации</param>
         /// <returns>Объект пользователя или null, если токен недействителен</returns>
         private async Task<User> GetUserByToken(string authToken)
         {
             if (string.IsNullOrWhiteSpace(authToken)) return null;
-            var token = authToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-                ? authToken.Substring(7) : authToken;
-            return await _context.Users.FirstOrDefaultAsync(u => u.Token == token);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Token == authToken);
         }
     }
 }

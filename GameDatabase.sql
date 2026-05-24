@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1:3316
--- Время создания: Май 17 2026 г., 16:30
+-- Время создания: Май 23 2026 г., 15:36
 -- Версия сервера: 8.0.30
 -- Версия PHP: 7.2.34
 
@@ -42,10 +42,39 @@ CREATE TABLE `Achievements` (
 --
 
 INSERT INTO `Achievements` (`Id`, `District_Id`, `Name`, `Description`, `Condition_Type`, `Condition_Value`, `Reward_Rep`) VALUES
-(1, 1, 'Первый шаг', 'Достигнуть 10 этажа в Промзоне', 'max_floor', 10, 10),
-(2, 1, 'Идеальная десятка', 'Построить 10 идеальных этажей подряд', 'perfect_streak', 10, 25),
-(3, 2, 'Бизнес-старт', 'Достичь 50 этажа в Деловом районе', 'max_floor', 50, 50),
-(4, 3, 'Градостроитель', 'Провести 20 забегов в Центре', 'games_played', 20, 75);
+(5, 1, 'Ночной дозор', 'Пережить ночь в Деловом районе', 'event_night', 1, 100),
+(6, 1, 'Сейсмостоустойчивость', 'Пережить землетрясение в Деловом районе', 'event_shake', 1, 200),
+(7, 1, 'Повелитель ветра', 'Пережить сильный ветер в Деловом районе', 'event_wind', 1, 300),
+(8, 1, 'Первая десятка!', 'Набрать 10 000 очков в Деловом районе', 'score_1', 10000, 100),
+(9, 1, 'Знаток своего дела', 'Достичь 30 000 очков в Деловом районе', 'score_2', 30000, 300),
+(10, 1, 'Профессиональный строитель', 'Преодолеть отметку в 60 000 очков в Деловом районе', 'score_3', 60000, 600),
+(11, 1, 'Эверест', 'Набрать 100 000 очков в Деловом районе', 'score_4', 100000, 1000),
+(12, 1, 'Идеальная десятка', 'Построить 10 идеальных этажей подряд в Деловом районе', 'ideal_1', 10, 100),
+(13, 1, 'Двадцать без изъяна', 'Построить 20 идеальных этажей подряд в Деловом районе', 'ideal_2', 20, 300),
+(14, 1, 'Ровно в ряд', 'Построить 50 идеальных этажей в одном забеге в Деловом районе', 'all_ideal_1', 50, 200),
+(15, 1, 'Построено на века', 'Построить 100 идеальных этажей в одном забеге в Деловом районе', 'all_ideal_2', 100, 500),
+(16, 2, 'Укротитель тьмы', 'Пережить ночь в Центре города', 'event_night', 1, 300),
+(17, 2, 'Крепыш', 'Пережить землетрясение в Центре города', 'event_shake', 1, 600),
+(18, 2, 'Непоколебимый', 'Пережить сильный ветер в Центре города', 'event_wind', 1, 900),
+(19, 2, 'Первая городская', 'Набрать 10 000 очков в Центре города', 'score_1', 10000, 300),
+(20, 2, 'Архитектор среднего звена', 'Достичь 30 000 очков в Центре города', 'score_2', 30000, 900),
+(21, 2, 'Градостроительный магнат', 'Преодолеть отметку в 60 000 очков в Центре города', 'score_3', 60000, 1800),
+(22, 2, 'Король небоскрёбов', 'Набрать 100 000 очков в Центре города', 'score_4', 100000, 3000),
+(23, 2, 'Золотая серия', 'Построить 10 идеальных этажей подряд в Центре города', 'ideal_1', 10, 300),
+(24, 2, 'Бриллиантовый пояс', 'Построить 30 идеальных этажей подряд в Центре города', 'ideal_2', 30, 900),
+(25, 2, 'Безупречный силуэт', 'Построить 50 идеальных этажей в одном забеге в Центре города', 'all_ideal_1', 50, 600),
+(26, 2, 'Город-совершенство', 'Построить 100 идеальных этажей в одном забеге в Центре города', 'all_ideal_2', 100, 1500),
+(27, 3, 'Ночные эксперименты', 'Пережить ночь в Научном районе', 'event_night', 1, 900),
+(28, 3, 'Сдвиг по фазе', 'Пережить землетрясение в Научном районе', 'event_shake', 1, 1800),
+(29, 3, 'Ветрянная мельница', 'Пережить сильный ветер в Научном районе', 'event_wind', 1, 2700),
+(30, 3, 'Младший научный сотрудник', 'Набрать 10 000 очков в Научном районе', 'score_1', 10000, 900),
+(31, 3, 'Кандидат наук', 'Достичь 30 000 очков в Научном районе', 'score_2', 30000, 2700),
+(32, 3, 'Нобелевский лоуреат', 'Преодолеть отметку в 60 000 очков в Научном районе', 'score_3', 60000, 5400),
+(33, 3, 'Космический лифт', 'Набрать 100 000 очков в Научном районе', 'score_4', 100000, 9000),
+(34, 3, 'Основы физики', 'Построить 10 идеальных этажей подряд в Научном районе', 'ideal_1', 10, 900),
+(35, 3, 'Квантовая механика', 'Построить 30 идеальных этажей подряд в Научном районе', 'ideal_2', 30, 2700),
+(36, 3, 'Формула успеха', 'Построить 50 идеальных этажей в одном забеге в Научном районе', 'all_ideal_1', 50, 1800),
+(37, 3, 'Ноль погрешности', 'Построить 100 идеальных этажей в одном забеге в Научном районе', 'all_ideal_2', 100, 4500);
 
 -- --------------------------------------------------------
 
@@ -66,8 +95,8 @@ CREATE TABLE `Bonuses` (
 
 INSERT INTO `Bonuses` (`Id`, `Name`, `Description`, `Price_money`) VALUES
 (1, 'Стабилизатор', 'Временно уменьшает шатание крана', 50),
-(2, 'Регулировка', 'Временно выравнивает небоскрёб по центру', 50),
-(3, 'Страховка', 'Временно даёт неуязвимость от ошибок', 50);
+(2, 'Регулятор', 'Выравнивает небоскрёб по центру', 50),
+(3, 'Магнит', 'Временно притягивает блоки к центру', 50);
 
 -- --------------------------------------------------------
 
@@ -79,7 +108,7 @@ CREATE TABLE `Districts` (
   `Id` int NOT NULL,
   `Name` varchar(100) NOT NULL,
   `Unlock_Rep_Req` int NOT NULL DEFAULT '0',
-  `Difficulty_Multiplier` decimal(3,2) NOT NULL DEFAULT '1.00',
+  `Difficulty_Multiplier` decimal(4,2) NOT NULL DEFAULT '1.00',
   `Sort_Order` int NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -88,11 +117,9 @@ CREATE TABLE `Districts` (
 --
 
 INSERT INTO `Districts` (`Id`, `Name`, `Unlock_Rep_Req`, `Difficulty_Multiplier`, `Sort_Order`) VALUES
-(1, 'Промзона', 0, '1.00', 1),
-(2, 'Деловой район', 500, '1.30', 2),
-(3, 'Центр города', 1500, '1.60', 3),
-(4, 'Научный район', 3000, '2.00', 4),
-(5, 'Космический лифт', 6000, '2.50', 5);
+(1, 'Деловой район', 0, '1.00', 1),
+(2, 'Центр города', 3000, '3.00', 2),
+(3, 'Научный район', 9000, '9.00', 3);
 
 -- --------------------------------------------------------
 
@@ -111,9 +138,9 @@ CREATE TABLE `Upgrades` (
 --
 
 INSERT INTO `Upgrades` (`Id`, `Name`, `Description`) VALUES
-(1, 'Стабильность крана', 'Уменьшает шатания крана на большой высоте'),
-(2, 'Фундамент', 'Уменьшение шатания небоскреба на большой высоте'),
-(3, 'Доп. золото', 'Увеличить получаемое золото в конце игры'),
+(1, 'Стабильность крана', 'Уменьшает шатание крана'),
+(2, 'Фундамент', 'Уменьшает шатание небоскреба'),
+(3, 'Страховка', 'Увеличивает количество разрешенных промахов'),
 (5, 'Доп. множитель', 'Увеличивает максимальный множитель на x0.1'),
 (6, 'Вместимость бонусов', 'Увеличивает вместимость бонусов');
 
@@ -141,15 +168,52 @@ INSERT INTO `Upgrades_cost` (`Id`, `Upgrade_id`, `Level`, `Price_money`) VALUES
 (4, 2, 1, 10),
 (5, 2, 2, 20),
 (6, 2, 3, 30),
-(7, 3, 1, 10),
-(8, 3, 2, 20),
-(9, 3, 3, 30),
 (13, 5, 1, 10),
 (14, 5, 2, 20),
 (15, 5, 3, 30),
 (16, 6, 1, 10),
 (17, 6, 2, 20),
-(18, 6, 3, 30);
+(18, 6, 3, 30),
+(19, 3, 1, 10),
+(20, 3, 2, 20),
+(21, 3, 3, 30),
+(22, 5, 4, 40),
+(23, 5, 5, 50),
+(24, 5, 6, 60),
+(25, 5, 7, 70),
+(26, 5, 8, 80),
+(27, 5, 9, 90),
+(28, 5, 10, 100),
+(29, 1, 4, 40),
+(30, 1, 5, 50),
+(31, 1, 6, 60),
+(32, 1, 7, 70),
+(33, 1, 8, 80),
+(34, 1, 9, 90),
+(35, 1, 10, 100),
+(36, 1, 11, 110),
+(37, 1, 12, 120),
+(38, 1, 13, 130),
+(39, 1, 14, 140),
+(40, 1, 15, 150),
+(41, 1, 16, 160),
+(42, 1, 17, 170),
+(44, 2, 4, 40),
+(45, 2, 5, 50),
+(46, 2, 6, 60),
+(47, 2, 7, 70),
+(48, 2, 8, 80),
+(49, 2, 9, 90),
+(50, 2, 10, 100),
+(51, 2, 11, 110),
+(52, 2, 12, 120),
+(53, 2, 13, 130),
+(54, 2, 14, 140),
+(55, 2, 15, 150),
+(56, 2, 16, 160),
+(57, 2, 17, 170),
+(58, 1, 18, 180),
+(59, 2, 18, 180);
 
 -- --------------------------------------------------------
 
@@ -232,8 +296,7 @@ INSERT INTO `Users` (`Id`, `Nickname`, `Password`, `Role`, `Token`, `Email`, `Re
 (56, 'Player_56', 'hashedpassword', 'player', NULL, NULL, '2026-04-27 19:28:57', 0, NULL, NULL),
 (62, 'testtest', '$2a$11$AIVRRE7zdVlOZzuDHLwVM.axCddubJFLUCVyyaa5cel.nGvP.iZZi', 'player', 'MjKs1DvLjXAX5aaovZbSET5mQZ8fYlrCQBzxeEH49jNGxVBRIDRmGvvyCnTqjEGlTfC8kDBHmXfylgEsAT9veaHrKp9ZpM1tph4a', NULL, '2026-05-05 13:48:26', 0, NULL, NULL),
 (63, 'bebra', '$2a$11$RPeeZIxR5qPjfcWguKOeq.f9Ulm0G3/9omqtwE6Zl1f.Vm3Ej94VS', 'player', 'gGyVIIaAVTLOzcXhHG2dPMAp4bfrPzS1DxUM78g2O06hO2StDsNJVF7A2SrHGkP2VQoo83x5StkSZwh0yUX8T9BRZb3HqDpuyDOM', NULL, '2026-05-05 23:21:48', 0, 'c8e01f440325429b8d5e529a9106ce6eMjsnLPApEUmWpoCQzhPrg', '2026-05-07 02:21:48'),
-(64, 'sanich', '$2a$11$s04Lgx0S9HUX1ES/YmZbeOo03uSVYbbWZCrswQrZO4plzH.0yFphq', 'player', 'ZRyLS6NI6CjcPPtFNCuqc7glMnaee55BeHimMp5UXInj8MCzjYRlD3CUWqfPxl83RrdhHNByPUfWbbE4xpd35EEftWlCmZdtvj46', NULL, '2026-05-08 15:40:30', 0, NULL, NULL),
-(75, 'admin', '$2a$11$EesOnvGqS6rasWdU2QGu5ehEFkk03n2lV3HsMlMlkievh6pPuI9m.', 'player', 'WPWr6cJGBSgXdnI8gctv1AlrO6QmYrqeRYQzNR3MShGmgpBrhLxTPh3GLFWlKtiCMrRqJ4cRDBGFELfo8dI7pfiRJan3Vs6VlsyW', 'u246012@gmail.com', '2026-05-17 10:10:57', 0, '8854bc6403a6493ba91913ff0f29e48951luooZ1y0iMSIRmuqC63A', '2026-05-18 13:10:57');
+(64, 'sanich', '$2a$11$s04Lgx0S9HUX1ES/YmZbeOo03uSVYbbWZCrswQrZO4plzH.0yFphq', 'player', 'ZRyLS6NI6CjcPPtFNCuqc7glMnaee55BeHimMp5UXInj8MCzjYRlD3CUWqfPxl83RrdhHNByPUfWbbE4xpd35EEftWlCmZdtvj46', NULL, '2026-05-08 15:40:30', 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -318,7 +381,7 @@ CREATE TABLE `Users_scores` (
 INSERT INTO `Users_scores` (`Id`, `User_id`, `District_Id`, `Best_score`) VALUES
 (1, 1, 1, 9999),
 (2, 2, 1, 9500),
-(3, 3, 2, 9300),
+(3, 3, 1, 9300),
 (4, 4, 1, 9300),
 (5, 5, 1, 8700),
 (6, 6, 1, 8450),
@@ -372,8 +435,7 @@ INSERT INTO `Users_scores` (`Id`, `User_id`, `District_Id`, `Best_score`) VALUES
 (54, 55, 1, 2600),
 (55, 56, 1, 2500),
 (61, 62, 1, 0),
-(62, 63, 1, 0),
-(63, 64, 1, 0);
+(62, 63, 1, 0);
 
 -- --------------------------------------------------------
 
@@ -417,15 +479,12 @@ CREATE TABLE `Users_upgrades` (
 INSERT INTO `Users_upgrades` (`Id`, `User_id`, `Upgrade_id`, `Level`) VALUES
 (111, 62, 1, 0),
 (112, 62, 2, 0),
-(113, 62, 3, 0),
 (115, 62, 5, 0),
 (116, 63, 1, 0),
 (117, 63, 2, 0),
-(118, 63, 3, 0),
 (120, 63, 5, 0),
 (122, 64, 1, 0),
 (123, 64, 2, 0),
-(124, 64, 3, 0),
 (125, 64, 5, 0),
 (126, 64, 6, 0);
 
@@ -555,7 +614,7 @@ ALTER TABLE `Users_wallet`
 -- AUTO_INCREMENT для таблицы `Achievements`
 --
 ALTER TABLE `Achievements`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT для таблицы `Bonuses`
@@ -579,55 +638,55 @@ ALTER TABLE `Upgrades`
 -- AUTO_INCREMENT для таблицы `Upgrades_cost`
 --
 ALTER TABLE `Upgrades_cost`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT для таблицы `Users`
 --
 ALTER TABLE `Users`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_achievements`
 --
 ALTER TABLE `Users_achievements`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_bonuses`
 --
 ALTER TABLE `Users_bonuses`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=98;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_gifts`
 --
 ALTER TABLE `Users_gifts`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_scores`
 --
 ALTER TABLE `Users_scores`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_stats`
 --
 ALTER TABLE `Users_stats`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_upgrades`
 --
 ALTER TABLE `Users_upgrades`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=137;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=163;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_wallet`
 --
 ALTER TABLE `Users_wallet`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- Ограничения внешнего ключа сохраненных таблиц

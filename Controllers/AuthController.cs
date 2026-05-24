@@ -212,12 +212,12 @@ namespace GameAPI.Controllers
         /// Повторно отправляет письмо подтверждения email для текущего пользователя.
         /// Проверяет лимит времени между отправками (не чаще 1 раза в минуту).
         /// </summary>
-        /// <param name="authToken">Токен аутентификации пользователя</param>
         /// <returns>Статус операции и сообщение, либо время ожидания до следующей отправки</returns>
         [HttpPost("resend-confirmation")]
         [EnableRateLimiting("ResendConfirmation")]
-        public async Task<IActionResult> ResendConfirmation([FromQuery] string authToken)
+        public async Task<IActionResult> ResendConfirmation()
         {
+            var authToken = ExtractAuthToken();
             var user = await GetUserByToken(authToken);
             if (user == null)
                 return Unauthorized(new { status = -1, message = "Недействительный токен." });
@@ -548,19 +548,27 @@ namespace GameAPI.Controllers
         }
 
         /// <summary>
-        /// Получение пользователя по токену (поддерживает "Bearer ..." или чистый токен)
+        /// Извлекает токен из заголовка Authorization.
+        /// </summary>
+        private string ExtractAuthToken()
+        {
+            var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(authHeader))
+                return null;
+            return authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                ? authHeader.Substring(7).Trim()
+                : authHeader.Trim();
+        }
+
+        /// <summary>
+        /// Получение пользователя по токену
         /// </summary>
         private async Task<User?> GetUserByToken(string authToken)
         {
             if (string.IsNullOrWhiteSpace(authToken))
                 return null;
 
-            // Убираем префикс "Bearer " если есть
-            var token = authToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-                ? authToken.Substring(7)
-                : authToken;
-
-            return await _context.Users.FirstOrDefaultAsync(u => u.Token == token);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Token == authToken);
         }
 
         /// <summary>

@@ -30,12 +30,12 @@ namespace GameAPI.Controllers
         /// Обрабатывает завершение игровой сессии: обновляет кошелек, рекорды, статистику и достижения игрока.
         /// Возвращает обновленные данные игрока включая ранги по всем районам.
         /// </summary>
-        /// <param name="authToken">Токен аутентификации пользователя</param>
         /// <param name="request">Данные о завершении игры (счет, заработанные ресурсы, прогресс достижений)</param>
         /// <returns>Обновленные данные игрока после завершения игры</returns>
         [HttpPost("end")]
-        public async Task<IActionResult> EndGame([FromQuery] string authToken, [FromBody] GameEndRequest request)
+        public async Task<IActionResult> EndGame([FromBody] GameEndRequest request)
         {
+            var authToken = ExtractAuthToken();
             var user = await GetUserByToken(authToken);
             if (user == null)
                 return Unauthorized(new { message = "Недействительный токен." });
@@ -235,19 +235,28 @@ namespace GameAPI.Controllers
         }
 
         /// <summary>
-        /// Получает пользователя по токену аутентификации.
-        /// Поддерживает формат токена с префиксом "Bearer " или без него.
+        /// Извлекает токен из заголовка Authorization.
         /// </summary>
-        /// <param name="authToken">Токен аутентификации (с префиксом "Bearer " или чистый)</param>
+        private string ExtractAuthToken()
+        {
+            var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(authHeader))
+                return null;
+            return authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                ? authHeader.Substring(7).Trim()
+                : authHeader.Trim();
+        }
+
+        /// <summary>
+        /// Получает пользователя по токену аутентификации.
+        /// </summary>
+        /// <param name="authToken">Токен аутентификации</param>
         /// <returns>Объект пользователя или null, если токен недействителен</returns>
         private async Task<User> GetUserByToken(string authToken)
         {
             if (string.IsNullOrWhiteSpace(authToken))
                 return null;
-            var token = authToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-                ? authToken.Substring(7)
-                : authToken;
-            return await _context.Users.FirstOrDefaultAsync(u => u.Token == token);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Token == authToken);
         }
     }
 }
