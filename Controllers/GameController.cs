@@ -8,6 +8,7 @@ using static GameAPI.Models.Authentification.FullLoginResponse;
 using ScoreByDistrictDto = GameAPI.Models.Authentification.FullLoginResponse.ScoreByDistrictDto;
 using DistrictRankDto = GameAPI.Models.Authentification.FullLoginResponse.DistrictRankDto;
 using UserAchievementDto = GameAPI.Models.Authentification.FullLoginResponse.UserAchievementDto;
+using Newtonsoft.Json;
 
 namespace GameAPI.Controllers
 {
@@ -168,6 +169,134 @@ namespace GameAPI.Controllers
             };
 
             return Ok(response);
+        }
+
+        /// <summary>
+        /// Сохраняет прогресс достижений без завершения игровой сессии.
+        /// Используется при выходе через окно паузы.
+        /// Не обновляет кошелёк, рекорды или статистику — только достижения.
+        /// </summary>
+        [HttpPost("save-achievements")]
+        public async Task<IActionResult> SaveAchievements([FromBody] SaveAchievementsRequest request)
+        {
+            var authToken = ExtractAuthToken();
+            var user = await GetUserByToken(authToken);
+            if (user == null)
+                return Unauthorized(new { message = "Недействительный токен." });
+
+            var wallet = await _context.UserWallets.FirstOrDefaultAsync(w => w.UserId == user.Id);
+            if (wallet == null) return BadRequest("Кошелёк не найден");
+
+            var stats = await _context.UserStatss.FirstOrDefaultAsync(s => s.UserId == user.Id);
+
+            // Обновляем прогресс достижений через существующий метод
+            await UpdateAchievementsAsync(user.Id, request.DistrictId, request.AchievementProgresses, stats, wallet);
+
+            await _context.SaveChangesAsync();
+
+            // Возвращаем обновлённый список достижений
+            var achievements = await _context.UserAchievements
+                .Where(ua => ua.UserId == user.Id)
+                .Select(ua => new UserAchievementDto
+                {
+                    AchievementId = ua.AchievementId,
+                    CurrentProgress = ua.CurrentProgress,
+                    IsUnlocked = ua.IsUnlocked
+                })
+                .ToListAsync();
+
+            return Ok(new SaveAchievementsResponse
+            {
+                Achievements = achievements,
+                Reputation = wallet.Reputation
+            });
+        }
+
+        /// <summary>
+        /// Синхронизирует отложенные запросы, отправленные клиентом в офлайн-режиме.
+        /// Принимает массив запросов и обрабатывает их последовательно.
+        /// Используется при восстановлении соединения после игры без интернета.
+        /// </summary>
+        [HttpPost("sync-offline")]
+        public async Task<IActionResult> SyncOfflineRequests([FromBody] List<OfflineSyncRequest> requests)
+        {
+            var authToken = ExtractAuthToken();
+            var user = await GetUserByToken(authToken);
+            if (user == null)
+                return Unauthorized(new { message = "Недействительный токен." });
+            var wallet = await _context.UserWallets.FirstOrDefaultAsync(w => w.UserId == user.Id);
+            if (wallet == null) return BadRequest("Кошелёк не найден");
+            var stats = await _context.UserStatss.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            var errors = new List<string>();
+            foreach (var request in requests)
+            {
+                try
+                {
+                    switch (request.RequestType)
+                    {
+                        case "GameEnd":
+                            await ProcessGameEndRequest(user, wallet, stats, request);
+                            break;
+                        case "SaveAchievements":
+                            await ProcessSaveAchievementsRequest(user, wallet, stats, request);
+                            break;
+                        default:
+                            errors.Add($"Unknown request type: {request.RequestType}");
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"Failed to process {request.RequestType}: {ex.Message}");
+                }
+            }
+            await _context.SaveChangesAsync();
+            return Ok(new { processed = requests.Count - errors.Count, errors });
+        }
+        private async Task ProcessGameEndRequest(User user, UserWallet wallet, UserStats stats, OfflineSyncRequest request)
+        {
+            var gameEndData = JsonConvert.DeserializeObject<GameEndRequest>(request.JsonBody);
+            if (gameEndData == null) return;
+            // Обновляем кошелёк
+            wallet.Money += gameEndData.MoneyEarned;
+            // Обновляем рекорд для указанного района
+            var userScore = await _context.UserScores
+                .FirstOrDefaultAsync(s => s.UserId == user.Id && s.DistrictId == gameEndData.DistrictId);
+            if (userScore != null && gameEndData.Score > userScore.BestScore)
+            {
+                userScore.BestScore = gameEndData.Score;
+            }
+            // Обновляем статистику
+            if (stats != null)
+            {
+                stats.GamesPlayedCount++;
+                stats.BlocksPlacedCount += gameEndData.BlocksPlaced;
+                stats.IBlocksPlacedCount += gameEndData.PerfectBlocks;
+            }
+            // Обновляем прогресс достижений
+            await UpdateAchievementsAsync(user.Id, gameEndData.DistrictId, gameEndData.AchievementProgresses, stats, wallet);
+            // Обрабатываем использованные бонусы
+            if (gameEndData.UsedBonuses != null && gameEndData.UsedBonuses.Count > 0)
+            {
+                foreach (var kvp in gameEndData.UsedBonuses)
+                {
+                    int bonusId = kvp.Key;
+                    int usedQuantity = kvp.Value;
+                    if (usedQuantity <= 0) continue;
+                    var userBonus = await _context.UserBonuses
+                        .FirstOrDefaultAsync(ub => ub.UserId == user.Id && ub.BonusId == bonusId);
+                    if (userBonus != null)
+                    {
+                        userBonus.Quantity = Math.Max(0, userBonus.Quantity - usedQuantity);
+                    }
+                }
+            }
+        }
+        private async Task ProcessSaveAchievementsRequest(User user, UserWallet wallet, UserStats stats, OfflineSyncRequest request)
+        {
+            var saveData = JsonConvert.DeserializeObject<SaveAchievementsRequest>(request.JsonBody);
+            if (saveData == null) return;
+            await UpdateAchievementsAsync(user.Id, saveData.DistrictId, saveData.AchievementProgresses, stats, wallet);
         }
 
         /// <summary>
