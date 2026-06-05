@@ -11,4 +11,9 @@ public class SaveAchievementsResponse
 
     [JsonProperty("reputation")]
     public int Reputation { get; set; }
+    /// <summary>
+    /// Обновлённый список бонусов пользователя (после списания использованных).
+    /// </summary>
+    [JsonProperty("bonuses")]
+    public List<UserBonusDto> Bonuses { get; set; }
 }

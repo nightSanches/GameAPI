@@ -175,6 +175,7 @@ namespace GameAPI.Controllers
         /// Сохраняет прогресс достижений без завершения игровой сессии.
         /// Используется при выходе через окно паузы.
         /// Не обновляет кошелёк, рекорды или статистику — только достижения.
+        /// Также обрабатывает использованные бонусы, списывая их из БД.
         /// </summary>
         [HttpPost("save-achievements")]
         public async Task<IActionResult> SaveAchievements([FromBody] SaveAchievementsRequest request)
@@ -192,6 +193,24 @@ namespace GameAPI.Controllers
             // Обновляем прогресс достижений через существующий метод
             await UpdateAchievementsAsync(user.Id, request.DistrictId, request.AchievementProgresses, stats, wallet);
 
+            // Обрабатываем использованные бонусы (списываем их)
+            if (request.UsedBonuses != null && request.UsedBonuses.Count > 0)
+            {
+                foreach (var kvp in request.UsedBonuses)
+                {
+                    int bonusId = kvp.Key;
+                    int usedQuantity = kvp.Value;
+                    if (usedQuantity <= 0) continue;
+                    var userBonus = await _context.UserBonuses
+                        .FirstOrDefaultAsync(ub => ub.UserId == user.Id && ub.BonusId == bonusId);
+                    if (userBonus != null)
+                    {
+                        userBonus.Quantity = Math.Max(0, userBonus.Quantity - usedQuantity);
+                    }
+                }
+            }
+
+
             await _context.SaveChangesAsync();
 
             // Возвращаем обновлённый список достижений
@@ -205,10 +224,21 @@ namespace GameAPI.Controllers
                 })
                 .ToListAsync();
 
+            // Возвращаем обновлённый список бонусов (после списания использованных)
+            var bonuses = await _context.UserBonuses
+                .Where(ub => ub.UserId == user.Id)
+                .Select(ub => new Models.Authentification.FullLoginResponse.UserBonusDto
+                {
+                    BonusId = ub.BonusId,
+                    Quantity = ub.Quantity
+                })
+                .ToListAsync();
+
             return Ok(new SaveAchievementsResponse
             {
                 Achievements = achievements,
-                Reputation = wallet.Reputation
+                Reputation = wallet.Reputation,
+                Bonuses = bonuses
             });
         }
 
@@ -297,6 +327,22 @@ namespace GameAPI.Controllers
             var saveData = JsonConvert.DeserializeObject<SaveAchievementsRequest>(request.JsonBody);
             if (saveData == null) return;
             await UpdateAchievementsAsync(user.Id, saveData.DistrictId, saveData.AchievementProgresses, stats, wallet);
+            // Обрабатываем использованные бонусы (списываем их)
+            if (saveData.UsedBonuses != null && saveData.UsedBonuses.Count > 0)
+            {
+                foreach (var kvp in saveData.UsedBonuses)
+                {
+                    int bonusId = kvp.Key;
+                    int usedQuantity = kvp.Value;
+                    if (usedQuantity <= 0) continue;
+                    var userBonus = await _context.UserBonuses
+                        .FirstOrDefaultAsync(ub => ub.UserId == user.Id && ub.BonusId == bonusId);
+                    if (userBonus != null)
+                    {
+                        userBonus.Quantity = Math.Max(0, userBonus.Quantity - usedQuantity);
+                    }
+                }
+            }
         }
 
         /// <summary>

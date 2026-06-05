@@ -21,4 +21,9 @@ public class SaveAchievementsRequest
     /// </summary>
     [JsonProperty("newlyUnlockedIds")]
     public List<int> NewlyUnlockedIds { get; set; } = new();
+    /// <summary>
+    /// Использованные бонусы за игровую сессию (bonusId -> количество использований).
+    /// </summary>
+    [JsonProperty("usedBonuses")]
+    public Dictionary<int, int> UsedBonuses { get; set; } = new();
 }
