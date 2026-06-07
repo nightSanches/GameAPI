@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1:3316
--- Время создания: Май 23 2026 г., 15:36
+-- Время создания: Июн 05 2026 г., 07:36
 -- Версия сервера: 8.0.30
 -- Версия PHP: 7.2.34
 
@@ -117,9 +117,9 @@ CREATE TABLE `Districts` (
 --
 
 INSERT INTO `Districts` (`Id`, `Name`, `Unlock_Rep_Req`, `Difficulty_Multiplier`, `Sort_Order`) VALUES
-(1, 'Деловой район', 0, '1.00', 1),
-(2, 'Центр города', 3000, '3.00', 2),
-(3, 'Научный район', 9000, '9.00', 3);
+(1, 'Деловой район', 0, '3.00', 1),
+(2, 'Центр города', 3000, '9.00', 2),
+(3, 'Научный район', 9000, '18.00', 3);
 
 -- --------------------------------------------------------
 
@@ -293,10 +293,7 @@ INSERT INTO `Users` (`Id`, `Nickname`, `Password`, `Role`, `Token`, `Email`, `Re
 (53, 'Player_53', 'hashedpassword', 'player', NULL, NULL, '2026-04-27 19:28:57', 0, NULL, NULL),
 (54, 'Player_54', 'hashedpassword', 'player', NULL, NULL, '2026-04-27 19:28:57', 0, NULL, NULL),
 (55, 'Player_55', 'hashedpassword', 'player', NULL, NULL, '2026-04-27 19:28:57', 0, NULL, NULL),
-(56, 'Player_56', 'hashedpassword', 'player', NULL, NULL, '2026-04-27 19:28:57', 0, NULL, NULL),
-(62, 'testtest', '$2a$11$AIVRRE7zdVlOZzuDHLwVM.axCddubJFLUCVyyaa5cel.nGvP.iZZi', 'player', 'MjKs1DvLjXAX5aaovZbSET5mQZ8fYlrCQBzxeEH49jNGxVBRIDRmGvvyCnTqjEGlTfC8kDBHmXfylgEsAT9veaHrKp9ZpM1tph4a', NULL, '2026-05-05 13:48:26', 0, NULL, NULL),
-(63, 'bebra', '$2a$11$RPeeZIxR5qPjfcWguKOeq.f9Ulm0G3/9omqtwE6Zl1f.Vm3Ej94VS', 'player', 'gGyVIIaAVTLOzcXhHG2dPMAp4bfrPzS1DxUM78g2O06hO2StDsNJVF7A2SrHGkP2VQoo83x5StkSZwh0yUX8T9BRZb3HqDpuyDOM', NULL, '2026-05-05 23:21:48', 0, 'c8e01f440325429b8d5e529a9106ce6eMjsnLPApEUmWpoCQzhPrg', '2026-05-07 02:21:48'),
-(64, 'sanich', '$2a$11$s04Lgx0S9HUX1ES/YmZbeOo03uSVYbbWZCrswQrZO4plzH.0yFphq', 'player', 'ZRyLS6NI6CjcPPtFNCuqc7glMnaee55BeHimMp5UXInj8MCzjYRlD3CUWqfPxl83RrdhHNByPUfWbbE4xpd35EEftWlCmZdtvj46', NULL, '2026-05-08 15:40:30', 0, NULL, NULL);
+(56, 'Player_56', 'hashedpassword', 'player', NULL, NULL, '2026-04-27 19:28:57', 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -325,21 +322,6 @@ CREATE TABLE `Users_bonuses` (
   `Quantity` int NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Дамп данных таблицы `Users_bonuses`
---
-
-INSERT INTO `Users_bonuses` (`Id`, `User_id`, `Bonus_id`, `Quantity`) VALUES
-(68, 62, 1, 0),
-(69, 62, 2, 0),
-(70, 62, 3, 0),
-(71, 63, 1, 0),
-(72, 63, 2, 0),
-(73, 63, 3, 0),
-(74, 64, 1, 0),
-(75, 64, 2, 0),
-(76, 64, 3, 0);
-
 -- --------------------------------------------------------
 
 --
@@ -351,15 +333,6 @@ CREATE TABLE `Users_gifts` (
   `User_id` int NOT NULL,
   `Last_bonus_dt` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Дамп данных таблицы `Users_gifts`
---
-
-INSERT INTO `Users_gifts` (`Id`, `User_id`, `Last_bonus_dt`) VALUES
-(28, 62, NULL),
-(29, 63, NULL),
-(30, 64, NULL);
 
 -- --------------------------------------------------------
 
@@ -433,9 +406,7 @@ INSERT INTO `Users_scores` (`Id`, `User_id`, `District_Id`, `Best_score`) VALUES
 (52, 53, 1, 2800),
 (53, 54, 1, 2700),
 (54, 55, 1, 2600),
-(55, 56, 1, 2500),
-(61, 62, 1, 0),
-(62, 63, 1, 0);
+(55, 56, 1, 2500);
 
 -- --------------------------------------------------------
 
@@ -451,14 +422,6 @@ CREATE TABLE `Users_stats` (
   `IBlocks_placed_count` int NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Дамп данных таблицы `Users_stats`
---
-
-INSERT INTO `Users_stats` (`Id`, `User_id`, `Games_played_count`, `Blocks_placed_count`, `IBlocks_placed_count`) VALUES
-(2, 63, 0, 0, 0),
-(3, 64, 0, 0, 0);
-
 -- --------------------------------------------------------
 
 --
@@ -472,22 +435,6 @@ CREATE TABLE `Users_upgrades` (
   `Level` int NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Дамп данных таблицы `Users_upgrades`
---
-
-INSERT INTO `Users_upgrades` (`Id`, `User_id`, `Upgrade_id`, `Level`) VALUES
-(111, 62, 1, 0),
-(112, 62, 2, 0),
-(115, 62, 5, 0),
-(116, 63, 1, 0),
-(117, 63, 2, 0),
-(120, 63, 5, 0),
-(122, 64, 1, 0),
-(123, 64, 2, 0),
-(125, 64, 5, 0),
-(126, 64, 6, 0);
-
 -- --------------------------------------------------------
 
 --
@@ -500,15 +447,6 @@ CREATE TABLE `Users_wallet` (
   `Money` int NOT NULL DEFAULT '0',
   `Reputation` int NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Дамп данных таблицы `Users_wallet`
---
-
-INSERT INTO `Users_wallet` (`Id`, `User_id`, `Money`, `Reputation`) VALUES
-(23, 62, 0, 0),
-(24, 63, 0, 0),
-(25, 64, 0, 0);
 
 --
 -- Индексы сохранённых таблиц
@@ -644,49 +582,49 @@ ALTER TABLE `Upgrades_cost`
 -- AUTO_INCREMENT для таблицы `Users`
 --
 ALTER TABLE `Users`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_achievements`
 --
 ALTER TABLE `Users_achievements`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=288;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_bonuses`
 --
 ALTER TABLE `Users_bonuses`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=98;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=116;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_gifts`
 --
 ALTER TABLE `Users_gifts`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_scores`
 --
 ALTER TABLE `Users_scores`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_stats`
 --
 ALTER TABLE `Users_stats`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_upgrades`
 --
 ALTER TABLE `Users_upgrades`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=163;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=193;
 
 --
 -- AUTO_INCREMENT для таблицы `Users_wallet`
 --
 ALTER TABLE `Users_wallet`
-  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `Id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- Ограничения внешнего ключа сохраненных таблиц

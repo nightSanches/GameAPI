@@ -1,5 +1,6 @@
-﻿using GameAPI.Models;
+using GameAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace GameAPI.Classes
 {
@@ -7,9 +8,12 @@ namespace GameAPI.Classes
     /// Контекст базы данных для приложения Apex Town.
     /// Наследуется от DbContext Entity Framework Core и предоставляет доступ ко всем таблицам БД.
     /// Автоматически создаёт базу данных при запуске, если она не существует.
+    /// Строка подключения читается из конфигурации (appsettings.json или переменных окружения).
     /// </summary>
     public class DBConnection : DbContext
     {
+        private readonly string _connectionString;
+
         // DbSet представляет таблицы базы данных
         public DbSet<User> Users { get; set; }
         public DbSet<Bonus> Bonuses { get; set; }
@@ -26,22 +30,26 @@ namespace GameAPI.Classes
         public DbSet<UserAchievement> UserAchievements { get; set; }
 
         /// <summary>
-        /// Конструктор по умолчанию. Вызывает EnsureCreated() для автоматического создания БД.
+        /// Конструктор с параметром строки подключения.
+        /// Вызывает EnsureCreated() для автоматического создания БД.
         /// </summary>
-        public DBConnection()
+        /// <param name="configuration">Конфигурация приложения для чтения строки подключения</param>
+        public DBConnection(IConfiguration configuration)
         {
+            _connectionString = configuration.GetConnectionString("DefaultConnection")
+                ?? "server=127.0.0.1;port=3316;uid=root;pwd=;database=GameDatabase";
             Database.EnsureCreated();
         }
 
         /// <summary>
         /// Конфигурация подключения к базе данных MySQL.
-        /// Использует локальный сервер MySQL на порту 3316 с базой данных "GameDatabase".
+        /// Строка подключения берётся из конфигурации (appsettings.json или переменных окружения).
         /// </summary>
         /// <param name="optionsBuilder">Билдер опций для настройки контекста БД</param>
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseMySql(
-                "server=127.0.0.1;port=3316;uid=root;pwd=;database=GameDatabase",
+                _connectionString,
                 new MySqlServerVersion(new Version(8, 0, 11)));
         }
 

@@ -83,7 +83,6 @@ builder.Services.AddDbContext<DBConnection>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddControllers();
-//builder.Services.AddScoped<RoleChecker>();
 
 var app = builder.Build();
 
