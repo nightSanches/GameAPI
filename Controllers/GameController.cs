@@ -1,6 +1,7 @@
 using GameAPI.Classes;
 using GameAPI.Models;
 using GameAPI.Models.Game;
+using GameAPI.Models.Shop;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static GameAPI.Models.Authentification.FullLoginResponse;
@@ -270,6 +271,9 @@ namespace GameAPI.Controllers
                         case "SaveAchievements":
                             await ProcessSaveAchievementsRequest(user, wallet, stats, request);
                             break;
+                        case "Purchase":
+                            await ProcessPurchaseRequest(user, wallet, request);
+                            break;
                         default:
                             errors.Add($"Unknown request type: {request.RequestType}");
                             break;
@@ -406,6 +410,48 @@ namespace GameAPI.Controllers
                         wallet.Reputation += achievement.RewardRep;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Обрабатывает отложенный запрос покупки из офлайн-режима.
+        /// Выполняет ту же логику, что и StoreController.Buy.
+        /// </summary>
+        private async Task ProcessPurchaseRequest(User user, UserWallet wallet, OfflineSyncRequest request)
+        {
+            var purchaseData = JsonConvert.DeserializeObject<PurchaseRequest>(request.JsonBody);
+            if (purchaseData == null) return;
+            switch (purchaseData.ItemType.ToLower())
+            {
+                case "bonus":
+                    var bonus = await _context.Bonuses.FindAsync(purchaseData.ItemId);
+                    if (bonus == null) return;
+                    if (wallet.Money < bonus.PriceMoney) return;
+                    wallet.Money -= bonus.PriceMoney;
+                    var userBonus = await _context.UserBonuses
+                        .FirstOrDefaultAsync(b => b.UserId == user.Id && b.BonusId == purchaseData.ItemId);
+                    if (userBonus == null)
+                    {
+                        userBonus = new UserBonus { UserId = user.Id, BonusId = purchaseData.ItemId, Quantity = 1 };
+                        _context.UserBonuses.Add(userBonus);
+                    }
+                    else
+                    {
+                        userBonus.Quantity++;
+                    }
+                    break;
+                case "upgrade":
+                    var upgradeLevel = await _context.UpgradesCosts
+                        .FirstOrDefaultAsync(l => l.UpgradeId == purchaseData.ItemId && l.Level == purchaseData.Level);
+                    if (upgradeLevel == null) return;
+                    if (wallet.Money < upgradeLevel.PriceMoney) return;
+                    var userUpgrade = await _context.UserUpgrades
+                        .FirstOrDefaultAsync(u => u.UserId == user.Id && u.UpgradeId == purchaseData.ItemId);
+                    if (userUpgrade == null) return;
+                    if (purchaseData.Level != userUpgrade.Level + 1) return;
+                    wallet.Money -= upgradeLevel.PriceMoney;
+                    userUpgrade.Level = purchaseData.Level;
+                    break;
             }
         }
 
